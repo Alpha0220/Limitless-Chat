@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, Mic, Sparkles } from "lucide-react";
+import { Send, Paperclip, Mic, Sparkles, Loader2 } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { cn } from "@/lib/utils";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface Message {
   id: number;
@@ -16,6 +18,7 @@ interface Message {
 interface ChatAreaProps {
   chatId: number | null;
   selectedModel: string;
+  onChatCreated?: (chatId: number) => void;
 }
 
 const suggestedPrompts = [
@@ -33,11 +36,40 @@ const suggestedPrompts = [
   },
 ];
 
-export function ChatArea({ chatId, selectedModel }: ChatAreaProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps) {
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const utils = trpc.useUtils();
+
+  // Fetch messages for current chat
+  const { data: messagesData, isLoading: messagesLoading } = trpc.chat.getMessages.useQuery(
+    { chatId: chatId! },
+    { enabled: !!chatId }
+  );
+
+  const messages = messagesData || [];
+
+  // Send message mutation
+  const sendMessageMutation = trpc.chat.sendMessage.useMutation({
+    onSuccess: (data) => {
+      // Invalidate queries to refresh data
+      if (chatId) {
+        utils.chat.getMessages.invalidate({ chatId });
+      }
+      utils.chat.list.invalidate();
+      utils.credits.getBalance.invalidate();
+
+      // If new chat was created, notify parent
+      if (!chatId && data.chatId && onChatCreated) {
+        onChatCreated(data.chatId);
+      }
+
+      toast.success(`Response received! ${data.creditsUsed} credits used.`);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to send message");
+    },
+  });
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -46,29 +78,17 @@ export function ChatArea({ chatId, selectedModel }: ChatAreaProps) {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || sendMessageMutation.isPending) return;
 
-    const userMessage: Message = {
-      id: Date.now(),
-      role: "user",
-      content: input,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    const messageContent = input;
     setInput("");
-    setIsLoading(true);
 
-    // TODO: Implement actual API call
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: "This is a placeholder response. The actual chat functionality will be implemented with the Limitless API integration.",
-        creditsUsed: 10,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsLoading(false);
-    }, 1000);
+    sendMessageMutation.mutate({
+      chatId: chatId || undefined,
+      model: selectedModel,
+      content: messageContent,
+      title: messageContent.slice(0, 50),
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -78,9 +98,17 @@ export function ChatArea({ chatId, selectedModel }: ChatAreaProps) {
     }
   };
 
-  const handleSuggestedPrompt = (prompt: string) => {
-    setInput(prompt);
+  const handleSuggestedPrompt = (prompt: { title: string; description: string }) => {
+    setInput(`${prompt.title}: ${prompt.description}`);
   };
+
+  if (messagesLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -109,9 +137,7 @@ export function ChatArea({ chatId, selectedModel }: ChatAreaProps) {
                   <button
                     key={index}
                     onClick={() =>
-                      handleSuggestedPrompt(
-                        `${prompt.title}: ${prompt.description}`
-                      )
+                      handleSuggestedPrompt(prompt)
                     }
                     className="text-left p-4 rounded-lg bg-gray-900 hover:bg-gray-800 transition-colors border border-gray-800"
                   >
@@ -148,7 +174,7 @@ export function ChatArea({ chatId, selectedModel }: ChatAreaProps) {
                   )}
                 >
                   <Streamdown>{message.content}</Streamdown>
-                  {message.creditsUsed && (
+                  {message.creditsUsed && message.creditsUsed > 0 && (
                     <div className="text-xs text-gray-400 mt-2">
                       {message.creditsUsed} credits used
                     </div>
@@ -156,7 +182,7 @@ export function ChatArea({ chatId, selectedModel }: ChatAreaProps) {
                 </div>
               </div>
             ))}
-            {isLoading && (
+            {sendMessageMutation.isPending && (
               <div className="flex gap-4 justify-start">
                 <div className="bg-gray-800 rounded-lg p-4">
                   <div className="flex gap-1">
@@ -179,6 +205,7 @@ export function ChatArea({ chatId, selectedModel }: ChatAreaProps) {
               variant="ghost"
               size="icon"
               className="text-gray-400 hover:text-white hover:bg-gray-800"
+              disabled
             >
               <Paperclip className="h-5 w-5" />
             </Button>
@@ -189,21 +216,27 @@ export function ChatArea({ chatId, selectedModel }: ChatAreaProps) {
               placeholder="How can I help you today?"
               className="flex-1 bg-transparent border-none focus-visible:ring-0 text-white resize-none min-h-[24px] max-h-[200px]"
               rows={1}
+              disabled={sendMessageMutation.isPending}
             />
             <Button
               variant="ghost"
               size="icon"
               className="text-gray-400 hover:text-white hover:bg-gray-800"
+              disabled
             >
               <Mic className="h-5 w-5" />
             </Button>
             <Button
               onClick={handleSend}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || sendMessageMutation.isPending}
               size="icon"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
             >
-              <Send className="h-5 w-5" />
+              {sendMessageMutation.isPending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
             </Button>
           </div>
           <div className="text-xs text-gray-500 text-center mt-2">

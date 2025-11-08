@@ -32,8 +32,11 @@ export function Sidebar({
   onSelectChat,
 }: SidebarProps) {
   const [, setLocation] = useLocation();
-  const [folders, setFolders] = useState<any[]>([]);
-  const [chats, setChats] = useState<any[]>([]);
+  const [folders] = useState<any[]>([]);
+  
+  // Fetch chats from backend
+  const { data: chatsData } = trpc.chat.list.useQuery();
+  const chats = chatsData || [];
   
   // Fetch credit balance
   const { data: balance } = trpc.credits.getBalance.useQuery();

@@ -81,3 +81,14 @@
 - [x] Display current month's usage and costs
 - [x] Add option to switch between pre-paid and pay-as-you-go
 - [ ] Implement grace period for failed payments
+
+## OpenRouter Integration
+- [x] Request OpenRouter API key from user
+- [x] Add OpenRouter API key to secrets
+- [x] Create OpenRouter client helper in backend
+- [x] Implement chat endpoint with OpenRouter
+- [ ] Add streaming support for real-time responses
+- [x] Connect frontend chat interface to backend
+- [x] Test all models (GPT-4, Claude, Perplexity, Gemini)
+- [x] Add error handling for API failures
+- [x] Implement token counting for accurate credit deduction

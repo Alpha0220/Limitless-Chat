@@ -49,6 +49,7 @@ export default function Home() {
         <ChatArea
           chatId={selectedChatId}
           selectedModel={selectedModel}
+          onChatCreated={(chatId) => setSelectedChatId(chatId)}
         />
       </div>
     </div>
