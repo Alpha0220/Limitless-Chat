@@ -101,10 +101,15 @@
 ## Projects/Workspaces Feature
 - [x] Create projects table in database
 - [x] Add project creation UI in sidebar
-- [x] Allow users to organize chats into projects
-- [x] Add project switcher in sidebar
-- [ ] Implement project-based chat filtering
-- [x] Add project rename and delete functionality
+- [ ] Implement working "Create Project" button with dialog
+- [ ] Add ability to assign chats to projects when creating
+- [ ] Add ability to move existing chats to projects
+- [x] Implement project-based chat filtering (show only project chats)
+- [ ] Add project rename functionality
+- [ ] Add project delete functionality
+- [ ] Add chat context menu (right-click) for moving to project
+- [ ] Show project name in chat list items
+- [ ] Add project color/icon customization
 
 ## Prompt Templates
 - [x] Create prompt_templates table in database
@@ -127,3 +132,22 @@
 - [ ] Optimize database queries with indexes
 - [ ] Add caching for frequently accessed data
 - [ ] Implement lazy loading for chat history
+
+## Media Creation Section
+- [ ] Add "Media Creation" navigation item in sidebar
+- [ ] Create MediaCreation page component
+- [ ] Add image generation model selector (Flux, Stable Diffusion, DALL-E)
+- [ ] Build image prompt input UI
+- [ ] Integrate with image generation APIs
+- [ ] Display generated images in gallery view
+- [ ] Add image download functionality
+- [ ] Add image history/gallery
+- [ ] Implement image editing capabilities
+- [ ] Add video generation support (future)
+- [ ] Track credits used for media generation
+
+## Bug Fixes - Performance Issue (RESOLVED)
+- [x] Fix streaming endpoint not returning responses
+- [x] Fix orderBy import in stream-chat.ts (was missing 'asc' import)
+- [x] Add better error logging for debugging
+- [x] Test chat functionality after fixes - WORKING PERFECTLY!

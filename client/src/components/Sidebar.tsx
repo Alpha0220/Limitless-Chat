@@ -12,6 +12,7 @@ import {
   Settings,
   CreditCard,
   Coins,
+  Image,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
@@ -39,7 +40,12 @@ export function Sidebar({
   
   // Fetch chats from backend
   const { data: chatsData } = trpc.chat.list.useQuery();
-  const chats = chatsData || [];
+  
+  // Filter chats by selected project
+  const chats = (chatsData || []).filter(chat => {
+    if (selectedProjectId === null) return true; // Show all chats
+    return chat.projectId === selectedProjectId; // Show only project chats
+  });
   
   // Fetch credit balance
   const { data: balance } = trpc.credits.getBalance.useQuery();
@@ -127,6 +133,19 @@ export function Sidebar({
           >
             <FileText className="h-5 w-5" />
             {!isCollapsed && <span className="ml-2">Templates</span>}
+          </Button>
+          
+          {/* Media Creation */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
+              isCollapsed && "justify-center px-2"
+            )}
+            onClick={() => setLocation("/media")}
+          >
+            <Image className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Media Creation</span>}
           </Button>       {/* Search */}
           <Button
             variant="ghost"

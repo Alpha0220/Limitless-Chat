@@ -7,15 +7,16 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Pricing from "./pages/Pricing";
 import Templates from "./pages/Templates";
+import MediaCreation from "./pages/MediaCreation";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
+    <Switch>      <Route path={"/"} component={Home} />
       <Route path={"/pricing"} component={Pricing} />
       <Route path={"/templates"} component={Templates} />
-      <Route path={"/404"} component={NotFound} />
+      <Route path={"/media"} component={MediaCreation} />
+      <Route path={" /404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>

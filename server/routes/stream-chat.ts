@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getDb } from "../db";
 import { chats, messages, users } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { streamOpenRouter, calculateCredits, OpenRouterMessage } from "../_core/openrouter";
 import { sdk } from "../_core/sdk";
 import { COOKIE_NAME } from "@shared/const";
@@ -95,7 +95,7 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
       .select()
       .from(messages)
       .where(eq(messages.chatId, finalChatId))
-      .orderBy(messages.createdAt);
+      .orderBy(asc(messages.createdAt));
 
     // Prepare messages for OpenRouter
     const openRouterMessages: OpenRouterMessage[] = chatHistory.map((msg) => ({
@@ -157,8 +157,13 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
     }
   } catch (error) {
     console.error("Stream chat error:", error);
-    res.status(500).json({
-      error: error instanceof Error ? error.message : "Internal server error",
-    });
+    if (error instanceof Error) {
+      console.error("Error stack:", error.stack);
+    }
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Internal server error",
+      });
+    }
   }
 });
