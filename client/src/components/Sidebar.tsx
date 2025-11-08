@@ -58,8 +58,11 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "h-screen bg-[#171717] border-r border-gray-800 flex flex-col transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64"
+        "flex h-screen flex-col border-r border-border bg-background transition-all duration-300",
+        isCollapsed ? "w-16" : "w-64",
+        // Mobile: Full-width overlay when open, hidden when collapsed
+        "md:relative md:translate-x-0",
+        isCollapsed ? "fixed -translate-x-full md:translate-x-0" : "fixed inset-y-0 left-0 z-50 w-full md:w-64"
       )}
     >
       {/* Header */}

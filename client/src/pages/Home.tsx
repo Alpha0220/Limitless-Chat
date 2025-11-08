@@ -1,16 +1,30 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
 import { ModelSwitcher } from "@/components/ModelSwitcher";
 import { getLoginUrl } from "@/const";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [selectedModel, setSelectedModel] = useState("google/gemini-2.0-flash-001");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Start collapsed on mobile
+
+  // Auto-collapse sidebar on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarCollapsed(true);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Redirect to login if not authenticated
   if (!loading && !isAuthenticated) {
@@ -27,7 +41,14 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex">
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex relative">
+      {/* Mobile overlay backdrop */}
+      {!isSidebarCollapsed && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsSidebarCollapsed(true)}
+        />
+      )}
       {/* Sidebar */}
       <Sidebar
         isCollapsed={isSidebarCollapsed}
@@ -41,7 +62,17 @@ export default function Home() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header with Model Switcher */}
-        <header className="h-14 border-b border-gray-800 flex items-center justify-center px-4">
+        <header className="h-14 border-b border-gray-800 flex items-center justify-between md:justify-center px-4">
+          {/* Hamburger menu for mobile */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          
           <ModelSwitcher
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}

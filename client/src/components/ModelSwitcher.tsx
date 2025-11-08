@@ -78,18 +78,18 @@ export function ModelSwitcher({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-2 text-white hover:bg-gray-800"
+          className="flex items-center gap-1 md:gap-2 text-white hover:bg-gray-800 px-2 md:px-4"
         >
           <div className="flex flex-col items-start">
-            <span className="font-medium">{currentModel.name}</span>
+            <span className="font-medium text-sm md:text-base">{currentModel.name}</span>
             <span className="text-xs text-gray-400">
               {currentModel.credits} credits per message
             </span>
           </div>
-          <ChevronDown className="h-4 w-4 ml-2" />
+          <ChevronDown className="h-3 w-3 md:h-4 md:w-4 ml-1 md:ml-2" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80 bg-[#171717] border-gray-800 text-white">
+      <DropdownMenuContent className="w-[90vw] md:w-80 max-w-md bg-[#171717] border-gray-800 text-white">
         {models.map((model) => (
           <DropdownMenuItem
             key={model.id}

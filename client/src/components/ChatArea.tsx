@@ -202,7 +202,7 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
             </div>
 
             {/* Model Name */}
-            <h2 className="text-3xl font-semibold text-white mb-12">
+            <h2 className="text-2xl md:text-3xl font-semibold text-white mb-8 md:mb-12 text-center px-4">
               {selectedModel.toUpperCase()}
             </h2>
 
@@ -217,7 +217,7 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
                 <button
                   key={index}
                   onClick={() => handleSuggestedPrompt(prompt)}
-                  className="w-full text-left p-4 rounded-lg bg-gray-900 hover:bg-gray-800 transition-colors border border-gray-800"
+                  className="w-full text-left p-3 md:p-4 rounded-lg bg-gray-900 hover:bg-gray-800 transition-colors border border-gray-800 touch-manipulation"
                 >
                   <div className="font-medium text-white">{prompt.title}</div>
                   <div className="text-sm text-gray-400 mt-1">{prompt.description}</div>
@@ -239,7 +239,7 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
             >
               <div
                 className={cn(
-                  "max-w-[80%] rounded-2xl px-4 py-3",
+                  "max-w-[85%] md:max-w-[80%] rounded-2xl px-3 md:px-4 py-2 md:py-3 text-sm md:text-base",
                   message.role === "user"
                     ? "bg-blue-600 text-white"
                     : "bg-gray-800 text-gray-100"
@@ -271,16 +271,16 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="border-t border-gray-800 p-4">
+      <div className="border-t border-gray-800 p-3 md:p-4">
         <div className="max-w-3xl mx-auto">
           <div className="relative bg-gray-900 rounded-2xl border border-gray-800">
-            <div className="flex items-end gap-2 p-3">
+            <div className="flex items-end gap-1 md:gap-2 p-2 md:p-3">
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-gray-400 hover:text-white shrink-0"
+                className="text-gray-400 hover:text-white shrink-0 h-9 w-9 md:h-10 md:w-10"
               >
-                <Paperclip className="h-5 w-5" />
+                <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
 
               <Textarea
@@ -288,29 +288,29 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="How can I help you today?"
-                className="min-h-[24px] max-h-[200px] resize-none border-0 bg-transparent text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="min-h-[24px] max-h-[200px] resize-none border-0 bg-transparent text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm md:text-base"
                 rows={1}
               />
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-1 md:gap-2 shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-gray-400 hover:text-white"
+                  className="text-gray-400 hover:text-white h-9 w-9 md:h-10 md:w-10"
                 >
-                  <Mic className="h-5 w-5" />
+                  <Mic className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
 
                 <Button
                   onClick={handleSendStreaming}
                   disabled={!input.trim() || isStreaming}
                   size="icon"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white h-9 w-9 md:h-10 md:w-10"
                 >
                   {isStreaming ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
                   ) : (
-                    <Send className="h-5 w-5" />
+                    <Send className="h-4 w-4 md:h-5 md:w-5" />
                   )}
                 </Button>
               </div>

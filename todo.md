@@ -157,3 +157,18 @@
 - [x] Update default model in ChatArea component
 - [x] Fix backend credit calculation for Gemini model
 - [x] Test chat functionality with Gemini as default
+
+## Mobile Responsiveness
+- [x] Add hamburger menu button for mobile screens
+- [x] Make sidebar collapsible/hideable on mobile
+- [x] Optimize sidebar width for mobile (full-width overlay or slide-in)
+- [x] Adjust font sizes for mobile readability
+- [x] Make model switcher dropdown mobile-friendly
+- [x] Optimize chat bubbles for narrow screens
+- [x] Add touch-friendly button sizes (min 44x44px)
+- [x] Test on iPhone SE (375px), iPhone 12/13 (390px), iPhone 14 Pro Max (430px)
+- [x] Fix horizontal scrolling issues on mobile
+- [x] Optimize suggested prompts layout for mobile
+- [x] Make credit balance and buttons stack vertically on mobile
+- [x] Add proper viewport meta tag
+- [x] Test landscape orientation on mobile devices
