@@ -54,8 +54,8 @@ const models: ModelOption[] = [
     description: "Best for research and fact-checking",
   },
   {
-    id: "gemini-pro",
-    name: "Gemini Pro",
+    id: "google/gemini-2.0-flash-001",
+    name: "Gemini 2.0 Flash",
     provider: "Google",
     credits: 2,
     description: "Fast and cost-effective",

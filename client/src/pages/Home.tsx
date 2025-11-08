@@ -9,7 +9,7 @@ export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [selectedModel, setSelectedModel] = useState("gpt-4");
+  const [selectedModel, setSelectedModel] = useState("google/gemini-2.0-flash-001");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Redirect to login if not authenticated

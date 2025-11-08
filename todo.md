@@ -151,3 +151,9 @@
 - [x] Fix orderBy import in stream-chat.ts (was missing 'asc' import)
 - [x] Add better error logging for debugging
 - [x] Test chat functionality after fixes - WORKING PERFECTLY!
+
+## Default Model Change
+- [x] Change default model from GPT-4 to Gemini in ModelSwitcher component
+- [x] Update default model in ChatArea component
+- [x] Fix backend credit calculation for Gemini model
+- [x] Test chat functionality with Gemini as default

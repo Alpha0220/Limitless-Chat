@@ -42,6 +42,7 @@ export const MODEL_MAP: Record<string, string> = {
   "claude-3-sonnet": "anthropic/claude-3-sonnet",
   "perplexity": "perplexity/llama-3.1-sonar-large-128k-online",
   "gemini-pro": "google/gemini-pro",
+  "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001", // Direct mapping
 };
 
 // Credit costs per model (matches frontend)
@@ -52,6 +53,7 @@ export const MODEL_CREDITS: Record<string, number> = {
   "claude-3-sonnet": 5,
   "perplexity": 3,
   "gemini-pro": 2,
+  "google/gemini-2.0-flash-001": 2, // Gemini 2.0 Flash costs 2 credits
 };
 
 /**
