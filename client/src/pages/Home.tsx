@@ -8,6 +8,7 @@ import { getLoginUrl } from "@/const";
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [selectedModel, setSelectedModel] = useState("gpt-4");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -33,6 +34,8 @@ export default function Home() {
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         selectedChatId={selectedChatId}
         onSelectChat={setSelectedChatId}
+        selectedProjectId={selectedProjectId}
+        onSelectProject={setSelectedProjectId}
       />
 
       {/* Main Content Area */}

@@ -48,7 +48,24 @@ export type UserSettings = typeof userSettings.$inferSelect;
 export type InsertUserSettings = typeof userSettings.$inferInsert;
 
 /**
- * Folders table for organizing chats
+ * Projects/Workspaces table for organizing chats
+ */
+export const projects = mysqlTable("projects", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  color: varchar("color", { length: 7 }).default("#3b82f6"), // hex color code
+  icon: varchar("icon", { length: 50 }).default("folder"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = typeof projects.$inferInsert;
+
+/**
+ * Folders table for organizing chats (deprecated in favor of projects)
  */
 export const folders = mysqlTable("folders", {
   id: int("id").autoincrement().primaryKey(),
@@ -69,7 +86,8 @@ export type InsertFolder = typeof folders.$inferInsert;
 export const chats = mysqlTable("chats", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  folderId: int("folderId"),
+  projectId: int("projectId"), // New: link to projects
+  folderId: int("folderId"), // Keep for backwards compatibility
   title: varchar("title", { length: 500 }).notNull(),
   model: varchar("model", { length: 100 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -93,6 +111,25 @@ export const messages = mysqlTable("messages", {
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
+
+/**
+ * Prompt templates table for storing reusable prompts
+ */
+export const promptTemplates = mysqlTable("promptTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  content: text("content").notNull(),
+  category: varchar("category", { length: 100 }),
+  isPublic: int("isPublic").default(0).notNull(), // 0 = private, 1 = public
+  usageCount: int("usageCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PromptTemplate = typeof promptTemplates.$inferSelect;
+export type InsertPromptTemplate = typeof promptTemplates.$inferInsert;
 
 /**
  * AI Models configuration table

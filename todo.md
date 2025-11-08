@@ -92,3 +92,33 @@
 - [x] Test all models (GPT-4, Claude, Perplexity, Gemini)
 - [x] Add error handling for API failures
 - [x] Implement token counting for accurate credit deduction
+
+## Bug Fixes
+- [x] Remove "0" displaying below user messages in chat
+- [ ] Optimize database queries for faster loading
+- [ ] Add loading skeletons for better UX
+
+## Projects/Workspaces Feature
+- [x] Create projects table in database
+- [x] Add project creation UI in sidebar
+- [x] Allow users to organize chats into projects
+- [x] Add project switcher in sidebar
+- [ ] Implement project-based chat filtering
+- [x] Add project rename and delete functionality
+
+## Prompt Templates
+- [x] Create prompt_templates table in database
+- [x] Build template creation UI
+- [x] Add template library/gallery view
+- [x] Implement template variables (e.g., {{topic}}, {{style}})
+- [ ] Add template search and filtering
+- [x] Allow users to save custom templates
+- [ ] Add pre-built template examples
+- [ ] Implement template quick-insert in chat
+
+## Performance Optimization
+- [ ] Implement streaming responses from OpenRouter
+- [ ] Add real-time token-by-token display
+- [ ] Optimize database queries with indexes
+- [ ] Add caching for frequently accessed data
+- [ ] Implement lazy loading for chat history

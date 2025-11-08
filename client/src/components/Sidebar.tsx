@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -17,12 +16,15 @@ import {
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
+import { ProjectsSection } from "@/components/ProjectsSection";
 
 interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   selectedChatId: number | null;
   onSelectChat: (chatId: number | null) => void;
+  selectedProjectId: number | null;
+  onSelectProject: (projectId: number | null) => void;
 }
 
 export function Sidebar({
@@ -30,9 +32,10 @@ export function Sidebar({
   onToggleCollapse,
   selectedChatId,
   onSelectChat,
+  selectedProjectId,
+  onSelectProject,
 }: SidebarProps) {
   const [, setLocation] = useLocation();
-  const [folders] = useState<any[]>([]);
   
   // Fetch chats from backend
   const { data: chatsData } = trpc.chat.list.useQuery();
@@ -100,6 +103,42 @@ export function Sidebar({
             {!isCollapsed && <span className="ml-2">Search</span>}
           </Button>
 
+          {/* Notes Button */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
+              isCollapsed && "justify-center px-2"
+            )}
+            onClick={() => setLocation("/notes")}
+          >
+            <FileText className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Notes</span>}
+          </Button>
+
+          {/* Templates Button */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
+              isCollapsed && "justify-center px-2"
+            )}
+            onClick={() => setLocation("/templates")}
+          >
+            <FileText className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Templates</span>}
+          </Button>       {/* Search */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
+              isCollapsed && "justify-center px-2"
+            )}
+          >
+            <Search className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-2">Search</span>}
+          </Button>
+
           {/* Notes */}
           <Button
             variant="ghost"
@@ -114,34 +153,11 @@ export function Sidebar({
 
           {!isCollapsed && (
             <>
-              <Separator className="my-4 bg-gray-800" />
-
-              {/* Folders Section */}
-              <div className="space-y-1">
-                <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">
-                  Folders
-                </div>
-                {folders.length === 0 ? (
-                  <div className="px-2 py-2 text-sm text-gray-500">
-                    No folders yet
-                  </div>
-                ) : (
-                  folders.map((folder) => (
-                    <Button
-                      key={folder.id}
-                      variant="ghost"
-                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
-                    >
-                      <Folder className="h-4 w-4" />
-                      <span className="ml-2">{folder.name}</span>
-                    </Button>
-                  ))
-                )}
-              </div>
-
-              <Separator className="my-4 bg-gray-800" />
-
-              {/* Chats Section */}
+              <Separator className="my-4 bg-gray-800" />              {/* Projects Section */}
+              <ProjectsSection
+                selectedProjectId={selectedProjectId}
+                onSelectProject={onSelectProject}
+              />    {/* Chats Section */}
               <div className="space-y-1">
                 <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">
                   Recent Chats

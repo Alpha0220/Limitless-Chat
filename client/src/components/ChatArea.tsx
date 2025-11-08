@@ -174,7 +174,7 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
                   )}
                 >
                   <Streamdown>{message.content}</Streamdown>
-                  {message.creditsUsed && message.creditsUsed > 0 && (
+                  {message.role === "assistant" && message.creditsUsed && message.creditsUsed > 0 && (
                     <div className="text-xs text-gray-400 mt-2">
                       {message.creditsUsed} credits used
                     </div>

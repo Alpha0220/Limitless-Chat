@@ -29,6 +29,20 @@
       "when": 1762611809412,
       "tag": "0003_cool_whistler",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1762613488518,
+      "tag": "0004_fresh_adam_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1762613797804,
+      "tag": "0005_hot_scorpion",
+      "breakpoints": true
     }
   ]
 }
