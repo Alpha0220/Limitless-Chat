@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -17,6 +17,11 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  credits: int("credits").default(0).notNull(),
+  billingType: mysqlEnum("billingType", ["prepaid", "payg"]).default("prepaid").notNull(),
+  stripeCustomerId: varchar("stripeCustomerId", { length: 255 }),
+  stripePaymentMethodId: varchar("stripePaymentMethodId", { length: 255 }),
+  monthlySpendingCap: decimal("monthlySpendingCap", { precision: 10, scale: 2 }).default("100.00"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -25,4 +30,138 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * User settings table for storing API keys and preferences
+ */
+export const userSettings = mysqlTable("userSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  limitlessApiKey: text("limitlessApiKey"),
+  openaiApiKey: text("openaiApiKey"),
+  anthropicApiKey: text("anthropicApiKey"),
+  selectedModel: varchar("selectedModel", { length: 100 }).default("gpt-4"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserSettings = typeof userSettings.$inferSelect;
+export type InsertUserSettings = typeof userSettings.$inferInsert;
+
+/**
+ * Folders table for organizing chats
+ */
+export const folders = mysqlTable("folders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  icon: varchar("icon", { length: 50 }),
+  order: int("order").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Folder = typeof folders.$inferSelect;
+export type InsertFolder = typeof folders.$inferInsert;
+
+/**
+ * Chats table for storing chat sessions
+ */
+export const chats = mysqlTable("chats", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  folderId: int("folderId"),
+  title: varchar("title", { length: 500 }).notNull(),
+  model: varchar("model", { length: 100 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Chat = typeof chats.$inferSelect;
+export type InsertChat = typeof chats.$inferInsert;
+
+/**
+ * Messages table for storing chat messages
+ */
+export const messages = mysqlTable("messages", {
+  id: int("id").autoincrement().primaryKey(),
+  chatId: int("chatId").notNull(),
+  role: mysqlEnum("role", ["user", "assistant", "system"]).notNull(),
+  content: text("content").notNull(),
+  creditsUsed: int("creditsUsed").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+
+/**
+ * AI Models configuration table
+ */
+export const aiModels = mysqlTable("aiModels", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  displayName: varchar("displayName", { length: 255 }).notNull(),
+  provider: varchar("provider", { length: 50 }).notNull(),
+  description: text("description"),
+  creditCost: int("creditCost").notNull(),
+  isActive: boolean("isActive").default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AIModel = typeof aiModels.$inferSelect;
+export type InsertAIModel = typeof aiModels.$inferInsert;
+
+/**
+ * Credit transactions table for tracking all credit operations
+ */
+export const creditTransactions = mysqlTable("creditTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: mysqlEnum("type", ["purchase", "usage", "refund", "bonus", "auto_charge"]).notNull(),
+  amount: int("amount").notNull(),
+  balanceAfter: int("balanceAfter").notNull(),
+  description: text("description"),
+  messageId: int("messageId"),
+  stripePaymentId: varchar("stripePaymentId", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CreditTransaction = typeof creditTransactions.$inferSelect;
+export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
+
+/**
+ * Pricing tiers table for credit packages
+ */
+export const pricingTiers = mysqlTable("pricingTiers", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  credits: int("credits").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  pricePerCredit: decimal("pricePerCredit", { precision: 10, scale: 4 }).notNull(),
+  stripePriceId: varchar("stripePriceId", { length: 255 }),
+  isActive: boolean("isActive").default(true),
+  isPopular: boolean("isPopular").default(false),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PricingTier = typeof pricingTiers.$inferSelect;
+export type InsertPricingTier = typeof pricingTiers.$inferInsert;
+
+/**
+ * Monthly billing table for pay-as-you-go tracking
+ */
+export const monthlyBilling = mysqlTable("monthlyBilling", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  month: varchar("month", { length: 7 }).notNull(), // Format: YYYY-MM
+  creditsUsed: int("creditsUsed").default(0).notNull(),
+  amountCharged: decimal("amountCharged", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  stripeInvoiceId: varchar("stripeInvoiceId", { length: 255 }),
+  status: mysqlEnum("status", ["pending", "paid", "failed"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MonthlyBilling = typeof monthlyBilling.$inferSelect;
+export type InsertMonthlyBilling = typeof monthlyBilling.$inferInsert;

@@ -1,0 +1,120 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface ModelOption {
+  id: string;
+  name: string;
+  provider: string;
+  credits: number;
+  description: string;
+}
+
+const models: ModelOption[] = [
+  {
+    id: "gpt-4",
+    name: "GPT-4",
+    provider: "OpenAI",
+    credits: 10,
+    description: "Most capable, best for complex tasks",
+  },
+  {
+    id: "gpt-3.5-turbo",
+    name: "GPT-3.5 Turbo",
+    provider: "OpenAI",
+    credits: 3,
+    description: "Fast and efficient for most tasks",
+  },
+  {
+    id: "claude-3-opus",
+    name: "Claude 3 Opus",
+    provider: "Anthropic",
+    credits: 8,
+    description: "Excellent for writing and analysis",
+  },
+  {
+    id: "claude-3-sonnet",
+    name: "Claude 3 Sonnet",
+    provider: "Anthropic",
+    credits: 5,
+    description: "Balanced performance and cost",
+  },
+  {
+    id: "perplexity",
+    name: "Perplexity",
+    provider: "Perplexity",
+    credits: 3,
+    description: "Best for research and fact-checking",
+  },
+  {
+    id: "gemini-pro",
+    name: "Gemini Pro",
+    provider: "Google",
+    credits: 2,
+    description: "Fast and cost-effective",
+  },
+];
+
+interface ModelSwitcherProps {
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+}
+
+export function ModelSwitcher({
+  selectedModel,
+  onModelChange,
+}: ModelSwitcherProps) {
+  const currentModel = models.find((m) => m.id === selectedModel) || models[0];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="flex items-center gap-2 text-white hover:bg-gray-800"
+        >
+          <div className="flex flex-col items-start">
+            <span className="font-medium">{currentModel.name}</span>
+            <span className="text-xs text-gray-400">
+              {currentModel.credits} credits per message
+            </span>
+          </div>
+          <ChevronDown className="h-4 w-4 ml-2" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-80 bg-[#171717] border-gray-800 text-white">
+        {models.map((model) => (
+          <DropdownMenuItem
+            key={model.id}
+            onClick={() => onModelChange(model.id)}
+            className={cn(
+              "flex items-start gap-3 p-3 cursor-pointer hover:bg-gray-800",
+              selectedModel === model.id && "bg-gray-800"
+            )}
+          >
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium">{model.name}</span>
+                <span className="text-xs text-gray-400">
+                  {model.credits} credits
+                </span>
+              </div>
+              <div className="text-xs text-gray-400 mb-1">{model.provider}</div>
+              <div className="text-xs text-gray-500">{model.description}</div>
+            </div>
+            {selectedModel === model.id && (
+              <Check className="h-4 w-4 text-green-500 flex-shrink-0 mt-1" />
+            )}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

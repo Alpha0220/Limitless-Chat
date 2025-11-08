@@ -1,33 +1,56 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import { useState } from "react";
+import { Sidebar } from "@/components/Sidebar";
+import { ChatArea } from "@/components/ChatArea";
+import { ModelSwitcher } from "@/components/ModelSwitcher";
+import { getLoginUrl } from "@/const";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
+  const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
+  const [selectedModel, setSelectedModel] = useState("gpt-4");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  // Redirect to login if not authenticated
+  if (!loading && !isAuthenticated) {
+    window.location.href = getLoginUrl();
+    return null;
+  }
 
-  // Use APP_LOGO (as image src) and APP_TITLE if needed
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex">
+      {/* Sidebar */}
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        selectedChatId={selectedChatId}
+        onSelectChat={setSelectedChatId}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header with Model Switcher */}
+        <header className="h-14 border-b border-gray-800 flex items-center justify-center px-4">
+          <ModelSwitcher
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+          />
+        </header>
+
+        {/* Chat Area */}
+        <ChatArea
+          chatId={selectedChatId}
+          selectedModel={selectedModel}
+        />
+      </div>
     </div>
   );
 }
