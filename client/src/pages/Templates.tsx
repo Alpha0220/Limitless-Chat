@@ -80,7 +80,7 @@ export default function Templates() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-8">
+    <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -89,13 +89,13 @@ export default function Templates() {
               variant="ghost"
               size="icon"
               onClick={() => setLocation("/")}
-              className="text-gray-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
               <h1 className="text-3xl font-bold">Prompt Templates</h1>
-              <p className="text-gray-400 mt-1">
+              <p className="text-muted-foreground mt-1">
                 Create and manage reusable prompts for your chats
               </p>
             </div>
@@ -103,15 +103,15 @@ export default function Templates() {
 
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Plus className="h-4 w-4 mr-2" />
                 New Template
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-2xl">
+            <DialogContent className="bg-popover border-border text-popover-foreground max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New Template</DialogTitle>
-                <DialogDescription className="text-gray-400">
+                <DialogDescription className="text-muted-foreground">
                   Create a reusable prompt template with variables like {"{{topic}}"} or {"{{style}}"}
                 </DialogDescription>
               </DialogHeader>
@@ -126,7 +126,7 @@ export default function Templates() {
                       setNewTemplate({ ...newTemplate, name: e.target.value })
                     }
                     placeholder="e.g., Blog Post Outline"
-                    className="bg-gray-800 border-gray-700 text-white"
+                    className="bg-input border-border text-foreground"
                   />
                 </div>
                 <div>
@@ -142,7 +142,7 @@ export default function Templates() {
                       })
                     }
                     placeholder="Brief description of this template"
-                    className="bg-gray-800 border-gray-700 text-white"
+                    className="bg-input border-border text-foreground"
                   />
                 </div>
                 <div>
@@ -155,9 +155,9 @@ export default function Templates() {
                       setNewTemplate({ ...newTemplate, content: e.target.value })
                     }
                     placeholder="Write a blog post about {{topic}} in a {{style}} tone..."
-                    className="bg-gray-800 border-gray-700 text-white min-h-[150px]"
+                    className="bg-input border-border text-foreground min-h-[150px]"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Use {"{{variable}}"} for dynamic placeholders
                   </p>
                 </div>
@@ -171,7 +171,7 @@ export default function Templates() {
                       setNewTemplate({ ...newTemplate, category: e.target.value })
                     }
                     placeholder="e.g., Writing, Coding, Research"
-                    className="bg-gray-800 border-gray-700 text-white"
+                    className="bg-input border-border text-foreground"
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -193,14 +193,14 @@ export default function Templates() {
                 <Button
                   variant="outline"
                   onClick={() => setIsCreateDialogOpen(false)}
-                  className="bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800"
+                  className="bg-transparent border-border text-foreground hover:bg-accent"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleCreateTemplate}
                   disabled={createTemplateMutation.isPending}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
                 >
                   {createTemplateMutation.isPending ? "Creating..." : "Create Template"}
                 </Button>
@@ -214,33 +214,33 @@ export default function Templates() {
           {templates?.map((template) => (
             <Card
               key={template.id}
-              className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors"
+              className="bg-card border-border hover:border-primary/50 transition-colors shadow-sm"
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-white text-lg">
+                    <CardTitle className="text-foreground text-lg">
                       {template.name}
                     </CardTitle>
                     {template.category && (
-                      <span className="inline-block mt-2 px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded">
+                      <span className="inline-block mt-2 px-2 py-1 text-xs bg-primary/10 text-primary rounded">
                         {template.category}
                       </span>
                     )}
                   </div>
                 </div>
                 {template.description && (
-                  <CardDescription className="text-gray-400 mt-2">
+                  <CardDescription className="text-muted-foreground mt-2">
                     {template.description}
                   </CardDescription>
                 )}
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-800 rounded p-3 text-sm text-gray-300 font-mono max-h-32 overflow-y-auto">
+                <div className="bg-accent/50 rounded p-3 text-sm text-foreground font-mono max-h-32 overflow-y-auto">
                   {template.content}
                 </div>
                 {template.usageCount > 0 && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     Used {template.usageCount} times
                   </p>
                 )}
@@ -250,7 +250,7 @@ export default function Templates() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleCopyTemplate(template.content)}
-                  className="flex-1 bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800"
+                  className="flex-1 bg-transparent border-border text-foreground hover:bg-accent"
                 >
                   <Copy className="h-4 w-4 mr-2" />
                   Copy
@@ -259,7 +259,7 @@ export default function Templates() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleDeleteTemplate(template.id)}
-                  className="bg-transparent border-gray-700 text-red-400 hover:bg-red-900/20"
+                  className="bg-transparent border-border text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -269,7 +269,7 @@ export default function Templates() {
 
           {templates?.length === 0 && (
             <div className="col-span-full text-center py-12">
-              <p className="text-gray-400 text-lg">
+              <p className="text-muted-foreground text-lg">
                 No templates yet. Create your first template to get started!
               </p>
             </div>

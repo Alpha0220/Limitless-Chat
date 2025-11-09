@@ -184,3 +184,16 @@
 - [x] Update button styles to match Apple design language
 - [x] Add subtle hover and active states
 - [x] Ensure proper visual hierarchy throughout the app
+
+## Theme Consistency & Testing
+- [x] Review all pages for Apple-inspired light theme consistency
+- [x] Update MediaCreation page with light theme styling
+- [x] Update Pricing page with light theme styling
+- [x] Update Templates page with light theme styling
+- [x] Update NotFound page with light theme styling
+- [x] Test Home page functionality (chat, model switching, sidebar)
+- [x] Test MediaCreation page functionality (UI display - backend not implemented)
+- [x] Test Pricing page functionality (credit packages display)
+- [x] Test Templates page functionality (UI display - empty state)
+- [ ] Test Projects functionality (create, delete, filter chats)
+- [x] Ensure all pages align with brand identity

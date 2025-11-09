@@ -66,16 +66,16 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <div className="border-b border-gray-800">
+      <div className="border-b border-border bg-background">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Buy Credits</h1>
             <Button
               variant="ghost"
               onClick={() => setLocation("/")}
-              className="text-gray-400 hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
             >
               Back to Chat
             </Button>
@@ -86,23 +86,23 @@ export default function Pricing() {
       {/* Current Balance */}
       {balance && (
         <div className="container mx-auto px-4 py-6">
-          <Card className="bg-gray-900 border-gray-800 p-6">
+          <Card className="bg-card border-border p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-foreground">
                   Current Balance
                 </h3>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-muted-foreground text-sm mt-1">
                   {balance.billingType === "prepaid"
                     ? "Pre-paid credits"
                     : "Pay-as-you-go"}
                 </p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-bold text-white">
+                <div className="text-3xl font-bold text-foreground">
                   {balance.credits}
                 </div>
-                <div className="text-sm text-gray-400">credits</div>
+                <div className="text-sm text-muted-foreground">credits</div>
               </div>
             </div>
           </Card>
@@ -113,7 +113,7 @@ export default function Pricing() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Choose Your Plan</h2>
-          <p className="text-gray-400 text-lg">
+          <p className="text-muted-foreground text-lg">
             One platform, all AI models. Save 70%+ vs separate subscriptions.
           </p>
         </div>
@@ -124,35 +124,35 @@ export default function Pricing() {
             return (
               <Card
                 key={plan.name}
-                className={`bg-gray-900 border-2 p-6 relative ${
+                className={`bg-card border-2 p-6 relative shadow-sm ${
                   plan.isPopular
-                    ? "border-blue-500"
-                    : "border-gray-800 hover:border-gray-700"
+                    ? "border-primary"
+                    : "border-border hover:border-primary/50"
                 } transition-all`}
               >
                 {plan.isPopular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                    <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
                       BEST VALUE
                     </span>
                   </div>
                 )}
 
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-800 mb-4">
-                    <Icon className="h-6 w-6 text-blue-500" />
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
+                    <Icon className="h-6 w-6 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2">
                     {plan.name}
                   </h3>
-                  <p className="text-gray-400 text-sm">{plan.description}</p>
+                  <p className="text-muted-foreground text-sm">{plan.description}</p>
                 </div>
 
                 <div className="text-center mb-6">
-                  <div className="text-4xl font-bold text-white mb-1">
+                  <div className="text-4xl font-bold text-foreground mb-1">
                     ${plan.price}
                   </div>
-                  <div className="text-gray-400 text-sm">
+                  <div className="text-muted-foreground text-sm">
                     {plan.credits} credits
                   </div>
                 </div>
@@ -160,8 +160,8 @@ export default function Pricing() {
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-300 text-sm">{feature}</span>
+                      <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground text-sm">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -170,8 +170,8 @@ export default function Pricing() {
                   onClick={() => handlePurchase(plan.name)}
                   className={`w-full ${
                     plan.isPopular
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : "bg-gray-800 hover:bg-gray-700"
+                      ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+                      : "bg-accent hover:bg-accent/80 text-accent-foreground"
                   }`}
                   disabled={selectedPlan === plan.name}
                 >
@@ -184,20 +184,20 @@ export default function Pricing() {
 
         {/* Pay-as-you-go Option */}
         <div className="max-w-3xl mx-auto mt-12">
-          <Card className="bg-gray-900 border-gray-800 p-8">
+          <Card className="bg-card border-border p-8 shadow-sm">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-white mb-2">
+              <h3 className="text-2xl font-bold text-foreground mb-2">
                 Or Try Pay-As-You-Go
               </h3>
-              <p className="text-gray-400">
+              <p className="text-muted-foreground">
                 Only pay for what you use, no commitment required
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-gray-800/50 rounded-lg p-6">
-                <h4 className="font-semibold text-white mb-2">How it works</h4>
-                <ul className="space-y-2 text-sm text-gray-400">
+              <div className="bg-accent/50 rounded-lg p-6">
+                <h4 className="font-semibold text-foreground mb-2">How it works</h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>• 6¢ per credit (slightly higher than pre-paid)</li>
                   <li>• Automatic billing at end of month</li>
                   <li>• $100 monthly spending cap (adjustable)</li>
@@ -205,11 +205,11 @@ export default function Pricing() {
                 </ul>
               </div>
 
-              <div className="bg-gray-800/50 rounded-lg p-6">
-                <h4 className="font-semibold text-white mb-2">
+              <div className="bg-accent/50 rounded-lg p-6">
+                <h4 className="font-semibold text-foreground mb-2">
                   Perfect for light users
                 </h4>
-                <ul className="space-y-2 text-sm text-gray-400">
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>• Use 20 messages = ~$3-6/month</li>
                   <li>• vs $80+ for all subscriptions</li>
                   <li>• Save 92%+ compared to separate plans</li>
@@ -221,7 +221,7 @@ export default function Pricing() {
             <div className="mt-6 text-center">
               <Button
                 variant="outline"
-                className="border-gray-700 hover:bg-gray-800"
+                className="border-border hover:bg-accent"
                 onClick={() => toast.info("Feature coming soon!")}
               >
                 Switch to Pay-As-You-Go
@@ -232,8 +232,8 @@ export default function Pricing() {
 
         {/* Model Costs Reference */}
         <div className="max-w-3xl mx-auto mt-12">
-          <Card className="bg-gray-900 border-gray-800 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">
+          <Card className="bg-card border-border p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
               Credit Costs Per Model
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
@@ -242,19 +242,19 @@ export default function Pricing() {
                 { name: "Claude Opus", credits: 8, cost: "$0.40" },
                 { name: "Claude Sonnet", credits: 5, cost: "$0.25" },
                 { name: "Perplexity", credits: 3, cost: "$0.15" },
-                { name: "Gemini Pro", credits: 2, cost: "$0.10" },
+                { name: "Gemini 2.0 Flash", credits: 2, cost: "$0.10" },
                 { name: "Limitless Context", credits: 1, cost: "$0.05" },
               ].map((model) => (
                 <div
                   key={model.name}
-                  className="flex items-center justify-between bg-gray-800/50 rounded-lg p-3"
+                  className="flex items-center justify-between bg-accent/50 rounded-lg p-3"
                 >
-                  <span className="text-gray-300">{model.name}</span>
+                  <span className="text-foreground">{model.name}</span>
                   <div className="text-right">
-                    <div className="text-white font-semibold">
+                    <div className="text-foreground font-semibold">
                       {model.credits} credits
                     </div>
-                    <div className="text-xs text-gray-500">{model.cost}</div>
+                    <div className="text-xs text-muted-foreground">{model.cost}</div>
                   </div>
                 </div>
               ))}
