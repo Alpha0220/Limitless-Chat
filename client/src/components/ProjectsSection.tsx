@@ -72,7 +72,7 @@ export function ProjectsSection({
   return (
     <div className="px-3 py-2">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           Projects
         </h3>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -80,15 +80,15 @@ export function ProjectsSection({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 text-gray-400 hover:text-white"
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
             >
               <Plus className="h-4 w-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-gray-900 border-gray-800 text-white">
+          <DialogContent className="bg-popover border-border text-popover-foreground">
             <DialogHeader>
               <DialogTitle>Create New Project</DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-muted-foreground">
                 Organize your chats into projects for better management.
               </DialogDescription>
             </DialogHeader>
@@ -101,7 +101,7 @@ export function ProjectsSection({
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   placeholder="e.g., Work, Personal, Research"
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-input border-border text-foreground"
                 />
               </div>
               <div>
@@ -112,7 +112,7 @@ export function ProjectsSection({
                   value={newProjectDescription}
                   onChange={(e) => setNewProjectDescription(e.target.value)}
                   placeholder="Brief description of this project"
-                  className="bg-gray-800 border-gray-700 text-white"
+                  className="bg-input border-border text-foreground"
                 />
               </div>
             </div>
@@ -120,14 +120,14 @@ export function ProjectsSection({
               <Button
                 variant="outline"
                 onClick={() => setIsCreateDialogOpen(false)}
-                className="bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800"
+                className="bg-transparent border-border text-foreground hover:bg-accent"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleCreateProject}
                 disabled={createProjectMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {createProjectMutation.isPending ? "Creating..." : "Create Project"}
               </Button>
@@ -143,8 +143,8 @@ export function ProjectsSection({
           className={cn(
             "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
             selectedProjectId === null
-              ? "bg-gray-800 text-white"
-              : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
           )}
         >
           <FolderOpen className="h-4 w-4" />
@@ -158,8 +158,8 @@ export function ProjectsSection({
             className={cn(
               "group flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
               selectedProjectId === project.id
-                ? "bg-gray-800 text-white"
-                : "text-gray-400 hover:bg-gray-800/50 hover:text-white"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
             )}
           >
             <button
@@ -171,7 +171,7 @@ export function ProjectsSection({
             </button>
             <button
               onClick={() => handleDeleteProject(project.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-700 rounded"
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-accent rounded"
             >
               <Trash2 className="h-3 w-3" />
             </button>
@@ -179,7 +179,7 @@ export function ProjectsSection({
         ))}
 
         {projects?.length === 0 && (
-          <p className="text-xs text-gray-500 px-3 py-2">
+          <p className="text-xs text-muted-foreground px-3 py-2">
             No projects yet. Create one to organize your chats!
           </p>
         )}

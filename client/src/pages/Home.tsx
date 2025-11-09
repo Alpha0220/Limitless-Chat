@@ -34,14 +34,14 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-foreground">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white flex relative">
+    <div className="min-h-screen bg-background text-foreground flex relative">
       {/* Mobile overlay backdrop */}
       {!isSidebarCollapsed && (
         <div
@@ -62,7 +62,7 @@ export default function Home() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header with Model Switcher */}
-        <header className="h-14 border-b border-gray-800 flex items-center justify-between md:justify-center px-4">
+        <header className="h-14 border-b border-border bg-background flex items-center justify-between md:justify-center px-4">
           {/* Hamburger menu for mobile */}
           <Button
             variant="ghost"

@@ -197,30 +197,30 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
         {messages.length === 0 && !streamingContent && (
           <div className="flex flex-col items-center justify-center h-full max-w-3xl mx-auto">
             {/* Model Icon */}
-            <div className="w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center mb-6">
-              <Sparkles className="h-8 w-8 text-white" />
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <Sparkles className="h-8 w-8 text-primary" />
             </div>
 
             {/* Model Name */}
-            <h2 className="text-2xl md:text-3xl font-semibold text-white mb-8 md:mb-12 text-center px-4">
+            <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-8 md:mb-12 text-center px-4">
               {selectedModel.toUpperCase()}
             </h2>
 
             {/* Suggested Prompts */}
             <div className="w-full space-y-3">
-              <div className="flex items-center gap-2 text-gray-400 mb-4">
+              <div className="flex items-center gap-2 text-muted-foreground mb-4">
                 <Sparkles className="h-4 w-4" />
-                <span className="text-sm">Suggested</span>
+                <span className="text-sm font-medium">Suggested</span>
               </div>
 
               {suggestedPrompts.map((prompt, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestedPrompt(prompt)}
-                  className="w-full text-left p-3 md:p-4 rounded-lg bg-gray-900 hover:bg-gray-800 transition-colors border border-gray-800 touch-manipulation"
+                  className="w-full text-left p-3 md:p-4 rounded-xl bg-card hover:bg-accent transition-colors border border-border shadow-sm touch-manipulation"
                 >
-                  <div className="font-medium text-white">{prompt.title}</div>
-                  <div className="text-sm text-gray-400 mt-1">{prompt.description}</div>
+                  <div className="font-medium text-foreground">{prompt.title}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{prompt.description}</div>
                 </button>
               ))}
             </div>
@@ -239,15 +239,15 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
             >
               <div
                 className={cn(
-                  "max-w-[85%] md:max-w-[80%] rounded-2xl px-3 md:px-4 py-2 md:py-3 text-sm md:text-base",
+                  "max-w-[85%] md:max-w-[80%] rounded-2xl px-3 md:px-4 py-2 md:py-3 text-sm md:text-base shadow-sm",
                   message.role === "user"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-800 text-gray-100"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-card-foreground border border-border"
                 )}
               >
                 <Streamdown>{message.content}</Streamdown>
                 {message.role === "assistant" && message.creditsUsed !== undefined && (
-                  <div className="text-xs text-gray-400 mt-2">
+                  <div className="text-xs text-muted-foreground mt-2">
                     {message.creditsUsed} credits used
                   </div>
                 )}
@@ -258,11 +258,11 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
           {/* Streaming message */}
           {streamingContent && (
             <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-gray-800 text-gray-100">
+              <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-card text-card-foreground border border-border shadow-sm">
                 <Streamdown>{streamingContent}</Streamdown>
                 <div className="flex items-center gap-1 mt-2">
                   <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
-                  <span className="text-xs text-gray-400">Generating...</span>
+                  <span className="text-xs text-muted-foreground">Generating...</span>
                 </div>
               </div>
             </div>
@@ -271,14 +271,14 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="border-t border-gray-800 p-3 md:p-4">
+      <div className="border-t border-border bg-background p-3 md:p-4">
         <div className="max-w-3xl mx-auto">
-          <div className="relative bg-gray-900 rounded-2xl border border-gray-800">
+          <div className="relative bg-input rounded-2xl border border-border shadow-sm">
             <div className="flex items-end gap-1 md:gap-2 p-2 md:p-3">
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-gray-400 hover:text-white shrink-0 h-9 w-9 md:h-10 md:w-10"
+                className="text-muted-foreground hover:text-foreground shrink-0 h-9 w-9 md:h-10 md:w-10"
               >
                 <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
@@ -288,7 +288,7 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="How can I help you today?"
-                className="min-h-[24px] max-h-[200px] resize-none border-0 bg-transparent text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm md:text-base"
+                className="min-h-[24px] max-h-[200px] resize-none border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm md:text-base"
                 rows={1}
               />
 
@@ -296,7 +296,7 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-gray-400 hover:text-white h-9 w-9 md:h-10 md:w-10"
+                  className="text-muted-foreground hover:text-foreground h-9 w-9 md:h-10 md:w-10"
                 >
                   <Mic className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>

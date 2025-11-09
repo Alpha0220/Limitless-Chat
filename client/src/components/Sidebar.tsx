@@ -58,7 +58,7 @@ export function Sidebar({
   return (
     <div
       className={cn(
-        "flex h-screen flex-col border-r border-border bg-background transition-all duration-300",
+        "flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 shadow-sm",
         isCollapsed ? "w-16" : "w-64",
         // Mobile: Full-width overlay when open, hidden when collapsed
         "md:relative md:translate-x-0",
@@ -66,15 +66,15 @@ export function Sidebar({
       )}
     >
       {/* Header */}
-      <div className="h-14 flex items-center justify-between px-3 border-b border-gray-800">
+      <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar-border">
         {!isCollapsed && (
-          <h1 className="text-lg font-semibold text-white">Limitless Chat</h1>
+          <h1 className="text-lg font-semibold text-sidebar-foreground">Limitless Chat</h1>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleCollapse}
-          className="text-gray-400 hover:text-white hover:bg-gray-800"
+          className="text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
         >
           {isCollapsed ? (
             <PanelLeftOpen className="h-5 w-5" />
@@ -85,172 +85,171 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-2 py-4">
-        <div className="space-y-2">
+      <ScrollArea className="flex-1 px-3 py-4">
+        <div className="space-y-1">
           {/* New Chat Button */}
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
+              "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent font-medium",
               isCollapsed && "justify-center px-2"
             )}
             onClick={handleNewChat}
           >
             <Plus className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">New Chat</span>}
+            {!isCollapsed && <span className="ml-3">New Chat</span>}
           </Button>
 
           {/* Search */}
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
+              "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent",
               isCollapsed && "justify-center px-2"
             )}
           >
             <Search className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Search</span>}
-          </Button>
-
-          {/* Notes Button */}
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
-              isCollapsed && "justify-center px-2"
-            )}
-            onClick={() => setLocation("/notes")}
-          >
-            <FileText className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Notes</span>}
-          </Button>
-
-          {/* Templates Button */}
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
-              isCollapsed && "justify-center px-2"
-            )}
-            onClick={() => setLocation("/templates")}
-          >
-            <FileText className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Templates</span>}
-          </Button>
-          
-          {/* Media Creation */}
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
-              isCollapsed && "justify-center px-2"
-            )}
-            onClick={() => setLocation("/media")}
-          >
-            <Image className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Media Creation</span>}
-          </Button>       {/* Search */}
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
-              isCollapsed && "justify-center px-2"
-            )}
-          >
-            <Search className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Search</span>}
+            {!isCollapsed && <span className="ml-3">Search</span>}
           </Button>
 
           {/* Notes */}
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
+              "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent",
               isCollapsed && "justify-center px-2"
             )}
           >
             <FileText className="h-5 w-5" />
-            {!isCollapsed && <span className="ml-2">Notes</span>}
+            {!isCollapsed && <span className="ml-3">Notes</span>}
           </Button>
 
-          {!isCollapsed && (
-            <>
-              <Separator className="my-4 bg-gray-800" />              {/* Projects Section */}
-              <ProjectsSection
-                selectedProjectId={selectedProjectId}
-                onSelectProject={onSelectProject}
-              />    {/* Chats Section */}
-              <div className="space-y-1">
-                <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">
-                  Recent Chats
-                </div>
-                {chats.length === 0 ? (
-                  <div className="px-2 py-2 text-sm text-gray-500">
-                    No chats yet
-                  </div>
-                ) : (
-                  chats.map((chat) => (
-                    <Button
-                      key={chat.id}
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
-                        selectedChatId === chat.id && "bg-gray-800 text-white"
-                      )}
-                      onClick={() => onSelectChat(chat.id)}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      <span className="ml-2 truncate">{chat.title}</span>
-                    </Button>
-                  ))
-                )}
-              </div>
-            </>
-          )}
+          {/* Templates */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent",
+              isCollapsed && "justify-center px-2"
+            )}
+            onClick={() => setLocation("/templates")}
+          >
+            <FileText className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-3">Templates</span>}
+          </Button>
+
+          {/* Media Creation */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent",
+              isCollapsed && "justify-center px-2"
+            )}
+            onClick={() => setLocation("/media")}
+          >
+            <Image className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-3">Media Creation</span>}
+          </Button>
+
+          {/* Duplicate Search */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent",
+              isCollapsed && "justify-center px-2"
+            )}
+          >
+            <Search className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-3">Search</span>}
+          </Button>
+
+          {/* Duplicate Notes */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent",
+              isCollapsed && "justify-center px-2"
+            )}
+          >
+            <FileText className="h-5 w-5" />
+            {!isCollapsed && <span className="ml-3">Notes</span>}
+          </Button>
         </div>
+
+        {!isCollapsed && (
+          <>
+            <Separator className="my-4 bg-sidebar-border" />
+
+            {/* Projects Section */}
+            <ProjectsSection
+              selectedProjectId={selectedProjectId}
+              onSelectProject={onSelectProject}
+            />
+
+            <Separator className="my-4 bg-sidebar-border" />
+
+            {/* Recent Chats */}
+            <div className="space-y-2">
+              <h2 className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Recent Chats
+              </h2>
+              <div className="space-y-1">
+                {chats.map((chat) => (
+                  <Button
+                    key={chat.id}
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate",
+                      selectedChatId === chat.id && "bg-sidebar-accent"
+                    )}
+                    onClick={() => onSelectChat(chat.id)}
+                  >
+                    <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                    <span className="ml-3 truncate">{chat.title || "New Chat"}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </ScrollArea>
 
       {/* Footer */}
-      <div className="border-t border-gray-800 p-2 space-y-1">
-        {/* Credits Display */}
-        {!isCollapsed && balance && (
-          <div className="px-3 py-2 mb-2 bg-gray-800/50 rounded-lg">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <Coins className="h-4 w-4 text-yellow-500" />
-                <span className="text-gray-300">Credits</span>
-              </div>
-              <span className="font-semibold text-white">{balance.credits}</span>
+      {!isCollapsed && (
+        <div className="border-t border-sidebar-border p-3 space-y-2">
+          {/* Credits Display */}
+          <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-sidebar-accent">
+            <div className="flex items-center gap-2">
+              <Coins className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-sidebar-foreground">Credits</span>
             </div>
-            <div className="text-xs text-gray-500 mt-1">
-              {balance.billingType === "prepaid" ? "Pre-paid" : "Pay-as-you-go"}
-            </div>
+            <span className="text-sm font-bold text-sidebar-foreground">
+              {balance?.credits || 0}
+            </span>
           </div>
-        )}
-        
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
-            isCollapsed && "justify-center px-2"
-          )}
-          onClick={() => setLocation("/pricing")}
-        >
-          <CreditCard className="h-5 w-5" />
-          {!isCollapsed && <span className="ml-2">Buy Credits</span>}
-        </Button>
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800",
-            isCollapsed && "justify-center px-2"
-          )}
-          onClick={() => setLocation("/settings")}
-        >
-          <Settings className="h-5 w-5" />
-          {!isCollapsed && <span className="ml-2">Settings</span>}
-        </Button>
-      </div>
+          <p className="text-xs text-muted-foreground px-3">
+            {balance?.billingType === "prepaid" ? "Pre-paid" : "Pay-as-you-go"}
+          </p>
+
+          {/* Buy Credits Button */}
+          <Button
+            variant="outline"
+            className="w-full justify-start border-sidebar-border hover:bg-sidebar-accent"
+            onClick={() => setLocation("/pricing")}
+          >
+            <CreditCard className="h-4 w-4" />
+            <span className="ml-2">Buy Credits</span>
+          </Button>
+
+          {/* Settings Button */}
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+          >
+            <Settings className="h-4 w-4" />
+            <span className="ml-2">Settings</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

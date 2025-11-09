@@ -172,3 +172,15 @@
 - [x] Make credit balance and buttons stack vertically on mobile
 - [x] Add proper viewport meta tag
 - [x] Test landscape orientation on mobile devices
+
+## Apple-Inspired UI Redesign
+- [x] Change theme from dark to light (white/light gray backgrounds)
+- [x] Implement Apple blue accent color (#007AFF) for buttons and active states
+- [x] Update sidebar to light gray (#F5F5F7) with white background for main area
+- [x] Add subtle shadows and borders (Apple style) instead of harsh lines
+- [x] Improve text contrast - dark text on light backgrounds
+- [x] Update typography to system fonts (San Francisco style)
+- [x] Refine chat bubbles with better contrast and readability
+- [x] Update button styles to match Apple design language
+- [x] Add subtle hover and active states
+- [x] Ensure proper visual hierarchy throughout the app
