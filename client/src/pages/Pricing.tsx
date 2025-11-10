@@ -238,12 +238,17 @@ export default function Pricing() {
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
+                { name: "GPT-5 Pro", credits: 25, cost: "$1.25" },
+                { name: "GPT-5", credits: 15, cost: "$0.75" },
+                { name: "Claude Opus 4.1", credits: 20, cost: "$1.00" },
+                { name: "Claude Sonnet 4.5", credits: 12, cost: "$0.60" },
                 { name: "GPT-4", credits: 10, cost: "$0.50" },
-                { name: "Claude Opus", credits: 8, cost: "$0.40" },
-                { name: "Claude Sonnet", credits: 5, cost: "$0.25" },
-                { name: "Perplexity", credits: 3, cost: "$0.15" },
+                { name: "Claude Sonnet 4", credits: 10, cost: "$0.50" },
+                { name: "Claude 3.7 Sonnet", credits: 8, cost: "$0.40" },
+                { name: "Sonar Pro", credits: 8, cost: "$0.40" },
+                { name: "Claude Haiku 4.5", credits: 6, cost: "$0.30" },
+                { name: "Sonar", credits: 3, cost: "$0.15" },
                 { name: "Gemini 2.0 Flash", credits: 2, cost: "$0.10" },
-                { name: "Limitless Context", credits: 1, cost: "$0.05" },
               ].map((model) => (
                 <div
                   key={model.name}

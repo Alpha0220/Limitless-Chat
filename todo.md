@@ -237,3 +237,17 @@
 - [x] Check if API key format is correct (KEY_ID:KEY_SECRET)
 - [x] Review server logs for detailed error messages
 - [x] Fix authentication issue and test image generation - RESOLVED!
+
+## Add Latest AI Models
+- [x] Research latest OpenRouter model IDs for GPT-5, Anthropic, and Perplexity
+- [x] Add GPT-5 and GPT-5 Pro models to model switcher
+- [x] Add latest Anthropic models (Claude Opus 4.1, Sonnet 4.5, Sonnet 4, Haiku 4.5, 3.7 Sonnet)
+- [x] Add Perplexity Sonar and Sonar Pro models
+- [x] Update credit costs for new models
+- [ ] Test all new models work correctly
+
+## GitHub Repository Push
+- [x] Replace S3 remote with GitHub remote (https://github.com/trinupab-sys/limitlesschat)
+- [x] Commit all current changes
+- [ ] Push code to GitHub repository - User will push manually with token
+- [ ] Verify code is visible on GitHub
