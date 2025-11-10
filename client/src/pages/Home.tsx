@@ -4,11 +4,13 @@ import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
 import { ModelSwitcher } from "@/components/ModelSwitcher";
 import { getLoginUrl } from "@/const";
-import { Menu } from "lucide-react";
+import { Menu, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [selectedModel, setSelectedModel] = useState("google/gemini-2.0-flash-001");
@@ -62,7 +64,7 @@ export default function Home() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header with Model Switcher */}
-        <header className="h-14 border-b border-border bg-background flex items-center justify-between md:justify-center px-4">
+        <header className="h-14 border-b border-border bg-background flex items-center justify-between px-4">
           {/* Hamburger menu for mobile */}
           <Button
             variant="ghost"
@@ -73,10 +75,26 @@ export default function Home() {
             <Menu className="h-5 w-5" />
           </Button>
           
-          <ModelSwitcher
-            selectedModel={selectedModel}
-            onModelChange={setSelectedModel}
-          />
+          <div className="flex-1 flex justify-center">
+            <ModelSwitcher
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+            />
+          </div>
+
+          {/* Dark Mode Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
         </header>
 
         {/* Chat Area */}

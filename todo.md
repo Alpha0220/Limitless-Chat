@@ -197,3 +197,9 @@
 - [x] Test Templates page functionality (UI display - empty state)
 - [ ] Test Projects functionality (create, delete, filter chats)
 - [x] Ensure all pages align with brand identity
+
+## UI Fixes & Dark Mode
+- [x] Fix cut-off "Limitless Chat" title at top of sidebar
+- [x] Add dark mode toggle button in header
+- [x] Enable theme switching functionality in ThemeProvider
+- [x] Test dark mode across all pages

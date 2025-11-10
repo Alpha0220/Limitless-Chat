@@ -66,15 +66,15 @@ export function Sidebar({
       )}
     >
       {/* Header */}
-      <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar-border">
+      <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar-border flex-shrink-0">
         {!isCollapsed && (
-          <h1 className="text-lg font-semibold text-sidebar-foreground">Limitless Chat</h1>
+          <h1 className="text-lg font-semibold text-sidebar-foreground truncate flex-1">Limitless Chat</h1>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleCollapse}
-          className="text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          className="text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent flex-shrink-0"
         >
           {isCollapsed ? (
             <PanelLeftOpen className="h-5 w-5" />
