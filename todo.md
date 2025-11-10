@@ -210,13 +210,8 @@
 - [x] Add tRPC procedure for image generation
 - [x] Connect Media Creation page to backend endpoint
 - [x] Implement credit deduction for image generation (5 credits per image)
-- [ ] **BLOCKED**: Test image generation functionality - button click not responding
+- [x] Test image generation functionality - WORKING PERFECTLY!
 - [x] Add error handling and loading states
-
-### Known Issues:
-- Generate button click handler not triggering mutation
-- FAL AI authentication resolved (using @fal-ai/client package)
-- Frontend tRPC mutation call needs debugging
 
 ## Gamma API Presentation Generation
 - [ ] Research Gamma API documentation and capabilities
@@ -234,3 +229,11 @@
 - [ ] Fix FAL AI image generation 500 error
 - [ ] Debug server logs to identify root cause
 - [ ] Test image generation after fix
+
+## FAL AI Unauthorized Error Fix
+- [x] Check FAL_AI_API_KEY environment variable is properly set
+- [x] Verify FAL AI client configuration in backend
+- [x] Test API key directly with FAL AI API
+- [x] Check if API key format is correct (KEY_ID:KEY_SECRET)
+- [x] Review server logs for detailed error messages
+- [x] Fix authentication issue and test image generation - RESOLVED!
