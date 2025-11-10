@@ -43,6 +43,13 @@
       "when": 1762613797804,
       "tag": "0005_hot_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1762740015409,
+      "tag": "0006_mighty_bloodaxe",
+      "breakpoints": true
     }
   ]
 }

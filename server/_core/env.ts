@@ -9,4 +9,5 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   openrouterApiKey: process.env.OPENROUTER_API_KEY ?? "",
   appUrl: process.env.VITE_APP_URL ?? "https://limitless-chat.manus.space",
+  falAiApiKey: process.env.FAL_AI_API_KEY ?? "",
 };

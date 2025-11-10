@@ -203,3 +203,34 @@
 - [x] Add dark mode toggle button in header
 - [x] Enable theme switching functionality in ThemeProvider
 - [x] Test dark mode across all pages
+
+## FAL AI Image Generation Integration
+- [x] Store FAL AI API key securely as environment variable
+- [x] Create backend image generation helper function
+- [x] Add tRPC procedure for image generation
+- [x] Connect Media Creation page to backend endpoint
+- [x] Implement credit deduction for image generation (5 credits per image)
+- [ ] **BLOCKED**: Test image generation functionality - button click not responding
+- [x] Add error handling and loading states
+
+### Known Issues:
+- Generate button click handler not triggering mutation
+- FAL AI authentication resolved (using @fal-ai/client package)
+- Frontend tRPC mutation call needs debugging
+
+## Gamma API Presentation Generation
+- [ ] Research Gamma API documentation and capabilities
+- [ ] Store Gamma API key securely as environment variable
+- [ ] Create backend helper function for Gamma API integration
+- [ ] Add tRPC procedure for presentation generation
+- [ ] Create "Presentations" page with user-friendly UI
+- [ ] Add customization inputs (topic, style, number of slides, tone, etc.)
+- [ ] Add "Presentations" menu item to sidebar navigation
+- [ ] Implement credit deduction for presentation generation
+- [ ] Test presentation generation functionality
+- [ ] Add error handling and loading states
+
+## Bug Fixes
+- [ ] Fix FAL AI image generation 500 error
+- [ ] Debug server logs to identify root cause
+- [ ] Test image generation after fix

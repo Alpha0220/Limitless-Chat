@@ -202,3 +202,22 @@ export const monthlyBilling = mysqlTable("monthlyBilling", {
 
 export type MonthlyBilling = typeof monthlyBilling.$inferSelect;
 export type InsertMonthlyBilling = typeof monthlyBilling.$inferInsert;
+
+/**
+ * Generated images table for tracking AI-generated images
+ */
+export const generatedImages = mysqlTable("generatedImages", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  prompt: text("prompt").notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  model: varchar("model", { length: 100 }).notNull().default("fal-ai/flux/schnell"),
+  imageSize: varchar("imageSize", { length: 50 }),
+  width: int("width"),
+  height: int("height"),
+  creditsUsed: int("creditsUsed").default(5).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type GeneratedImage = typeof generatedImages.$inferSelect;
+export type InsertGeneratedImage = typeof generatedImages.$inferInsert;
