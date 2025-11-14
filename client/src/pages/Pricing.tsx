@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Sparkles, Zap, Rocket } from "lucide-react";
+import { Check, Sparkles, Zap, Rocket, CreditCard, QrCode } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -14,6 +14,7 @@ const pricingPlans = [
     pricePerCredit: 0.05,
     icon: Sparkles,
     description: "Perfect for trying out the platform",
+    planId: "starter",
     features: [
       "200 credits",
       "~20-40 messages",
@@ -29,6 +30,7 @@ const pricingPlans = [
     icon: Zap,
     description: "Best value for regular users",
     isPopular: true,
+    planId: "popular",
     features: [
       "600 credits",
       "~60-120 messages",
@@ -44,6 +46,7 @@ const pricingPlans = [
     pricePerCredit: 0.033,
     icon: Rocket,
     description: "For power users",
+    planId: "pro",
     features: [
       "1,500 credits",
       "~150-300 messages",
@@ -57,12 +60,41 @@ const pricingPlans = [
 export default function Pricing() {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "qr">("card");
+  const [isLoading, setIsLoading] = useState(false);
   const { data: balance } = trpc.credits.getBalance.useQuery();
+  const createCheckoutMutation = trpc.stripe.createCheckoutSession.useMutation();
 
-  const handlePurchase = (planName: string) => {
-    setSelectedPlan(planName);
-    toast.info("Stripe integration coming soon!");
-    // TODO: Implement Stripe checkout
+  useEffect(() => {
+    // Load Stripe.js
+    const script = document.createElement("script");
+    script.src = "https://js.stripe.com/v3/";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
+  const handlePurchase = async (planId: string) => {
+    setSelectedPlan(planId);
+    setIsLoading(true);
+
+    try {
+      const currentUrl = window.location.origin;
+      const result = await createCheckoutMutation.mutateAsync({
+        planName: planId as "starter" | "popular" | "pro",
+        successUrl: `${currentUrl}/?payment=success`,
+        cancelUrl: `${currentUrl}/pricing?payment=cancelled`,
+      });
+
+      if (result.checkoutUrl) {
+        // Redirect to Stripe checkout
+        window.location.href = result.checkoutUrl;
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error("Failed to create checkout session. Please try again.");
+      setIsLoading(false);
+      setSelectedPlan(null);
+    }
   };
 
   return (
@@ -109,6 +141,46 @@ export default function Pricing() {
         </div>
       )}
 
+      {/* Payment Method Selection */}
+      <div className="container mx-auto px-4 py-6">
+        <Card className="bg-card border-border p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            Payment Method
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setPaymentMethod("card")}
+              className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                paymentMethod === "card"
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              <CreditCard className="h-6 w-6 text-primary" />
+              <div className="text-left">
+                <div className="font-semibold text-foreground">Credit Card</div>
+                <div className="text-sm text-muted-foreground">Visa, Mastercard</div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setPaymentMethod("qr")}
+              className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                paymentMethod === "qr"
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              <QrCode className="h-6 w-6 text-primary" />
+              <div className="text-left">
+                <div className="font-semibold text-foreground">PromptPay</div>
+                <div className="text-sm text-muted-foreground">QR Payment (TH)</div>
+              </div>
+            </button>
+          </div>
+        </Card>
+      </div>
+
       {/* Pricing Plans */}
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
@@ -150,7 +222,7 @@ export default function Pricing() {
 
                 <div className="text-center mb-6">
                   <div className="text-4xl font-bold text-foreground mb-1">
-                    ${plan.price}
+                    ฿{plan.price}
                   </div>
                   <div className="text-muted-foreground text-sm">
                     {plan.credits} credits
@@ -167,15 +239,17 @@ export default function Pricing() {
                 </ul>
 
                 <Button
-                  onClick={() => handlePurchase(plan.name)}
+                  onClick={() => handlePurchase(plan.planId)}
                   className={`w-full ${
                     plan.isPopular
                       ? "bg-primary hover:bg-primary/90 text-primary-foreground"
                       : "bg-accent hover:bg-accent/80 text-accent-foreground"
                   }`}
-                  disabled={selectedPlan === plan.name}
+                  disabled={selectedPlan === plan.planId || isLoading}
                 >
-                  {selectedPlan === plan.name ? "Processing..." : "Purchase"}
+                  {selectedPlan === plan.planId && isLoading
+                    ? "Processing..."
+                    : "Purchase"}
                 </Button>
               </Card>
             );
@@ -200,7 +274,7 @@ export default function Pricing() {
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li>• 6¢ per credit (slightly higher than pre-paid)</li>
                   <li>• Automatic billing at end of month</li>
-                  <li>• $100 monthly spending cap (adjustable)</li>
+                  <li>• ฿3,000 monthly spending cap (adjustable)</li>
                   <li>• Cancel anytime, no questions asked</li>
                 </ul>
               </div>
@@ -210,8 +284,8 @@ export default function Pricing() {
                   Perfect for light users
                 </h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Use 20 messages = ~$3-6/month</li>
-                  <li>• vs $80+ for all subscriptions</li>
+                  <li>• Use 20 messages = ~฿180-360/month</li>
+                  <li>• vs ฿2,400+ for all subscriptions</li>
                   <li>• Save 92%+ compared to separate plans</li>
                   <li>• No unused subscription fees</li>
                 </ul>
@@ -238,17 +312,17 @@ export default function Pricing() {
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                { name: "GPT-5 Pro", credits: 25, cost: "$1.25" },
-                { name: "GPT-5", credits: 15, cost: "$0.75" },
-                { name: "Claude Opus 4.1", credits: 20, cost: "$1.00" },
-                { name: "Claude Sonnet 4.5", credits: 12, cost: "$0.60" },
-                { name: "GPT-4", credits: 10, cost: "$0.50" },
-                { name: "Claude Sonnet 4", credits: 10, cost: "$0.50" },
-                { name: "Claude 3.7 Sonnet", credits: 8, cost: "$0.40" },
-                { name: "Sonar Pro", credits: 8, cost: "$0.40" },
-                { name: "Claude Haiku 4.5", credits: 6, cost: "$0.30" },
-                { name: "Sonar", credits: 3, cost: "$0.15" },
-                { name: "Gemini 2.0 Flash", credits: 2, cost: "$0.10" },
+                { name: "GPT-5 Pro", credits: 25, cost: "฿37.50" },
+                { name: "GPT-5", credits: 15, cost: "฿22.50" },
+                { name: "Claude Opus 4.1", credits: 20, cost: "฿30.00" },
+                { name: "Claude Sonnet 4.5", credits: 12, cost: "฿18.00" },
+                { name: "GPT-4", credits: 10, cost: "฿15.00" },
+                { name: "Claude Sonnet 4", credits: 10, cost: "฿15.00" },
+                { name: "Claude 3.7 Sonnet", credits: 8, cost: "฿12.00" },
+                { name: "Sonar Pro", credits: 8, cost: "฿12.00" },
+                { name: "Claude Haiku 4.5", credits: 6, cost: "฿9.00" },
+                { name: "Sonar", credits: 3, cost: "฿4.50" },
+                { name: "Gemini 2.0 Flash", credits: 2, cost: "฿3.00" },
               ].map((model) => (
                 <div
                   key={model.name}

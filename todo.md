@@ -61,7 +61,7 @@
 - [x] Implement credit deduction per message based on model
 - [x] Add credit balance display in UI
 - [x] Create pricing page showing credit packages
-- [ ] Integrate Stripe for credit purchases
+- [x] Integrate Stripe for credit purchases (card + PromptPay QR for Thailand)
 - [ ] Add credit usage analytics dashboard
 - [ ] Implement low credit warnings
 - [ ] Add credit refill notifications
@@ -251,3 +251,16 @@
 - [x] Commit all current changes
 - [ ] Push code to GitHub repository - User will push manually with token
 - [ ] Verify code is visible on GitHub
+
+## Stripe Payment Integration
+- [x] Create env.example.txt with Stripe environment variables
+- [x] Install Stripe package (stripe v19.3.1)
+- [x] Create Stripe backend helper with checkout and webhook handling
+- [x] Add Stripe environment variables to ENV object
+- [x] Create Stripe router with tRPC procedures
+- [x] Update Pricing page with payment method selection (Card + PromptPay QR)
+- [x] Add Stripe checkout session creation
+- [x] Support Thailand currency (THB) and PromptPay QR payment
+- [ ] Test Stripe checkout flow end-to-end
+- [ ] Configure Stripe webhook for payment success
+- [ ] Add Stripe test keys to environment

@@ -10,4 +10,7 @@ export const ENV = {
   openrouterApiKey: process.env.OPENROUTER_API_KEY ?? "",
   appUrl: process.env.VITE_APP_URL ?? "https://limitless-chat.manus.space",
   falAiApiKey: process.env.FAL_AI_API_KEY ?? "",
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? "",
+  stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY ?? "",
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
 };
