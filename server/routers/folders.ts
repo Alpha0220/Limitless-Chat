@@ -213,4 +213,26 @@ export const foldersRouter = router({
 
       return { success: true };
     }),
+
+  rename: protectedProcedure
+    .input(
+      z.object({
+        folderId: z.number(),
+        name: z.string().min(1).max(255),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(folders)
+        .set({
+          name: input.name,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(folders.id, input.folderId), eq(folders.userId, ctx.user.id)));
+
+      return { success: true };
+    }),
 });

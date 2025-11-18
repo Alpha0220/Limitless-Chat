@@ -374,3 +374,11 @@
 - [x] Refactor project/folder items to use div instead of nested buttons
 - [x] Refactor accordion trigger buttons to use div for create actions
 - [x] Ensure all delete/create buttons are accessible without nesting
+
+## Feature Requests - Chat Organization
+- [x] Add rename mutations for projects, folders, and chats
+- [x] Add move chat mutation to move chats between locations (already existed)
+- [x] Create context menu component for projects with rename/delete
+- [x] Create context menu component for folders with rename/delete
+- [x] Update chat context menu with rename/move/delete options
+- [x] Integrate all context menus into Sidebar

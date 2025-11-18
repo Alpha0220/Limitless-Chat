@@ -146,4 +146,26 @@ export const projectsRouter = router({
 
       return { success: true };
     }),
+
+  rename: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+        name: z.string().min(1).max(255),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      await db
+        .update(projects)
+        .set({
+          name: input.name,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(projects.id, input.projectId), eq(projects.userId, ctx.user.id)));
+
+      return { success: true };
+    }),
 });

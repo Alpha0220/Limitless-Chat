@@ -19,15 +19,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+  } from "@/components/ui/dialog";
+import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import { Folder, Trash2, FolderPlus, Plus } from "lucide-react";
+import { Folder, Trash2, FolderPlus, Plus, Pencil } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ interface ChatContextMenuProps {
   children: React.ReactNode;
   onDelete?: () => void;
   onMove?: () => void;
+  initialTitle?: string;
 }
 
 export function ChatContextMenu({
@@ -46,12 +48,15 @@ export function ChatContextMenu({
   onMove,
 }: ChatContextMenuProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
+  const [newChatName, setNewChatName] = useState("");
   const [newProjectName, setNewProjectName] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   
   const deleteMutation = trpc.chat.delete.useMutation();
+  const renameMutation = trpc.chat.updateTitle.useMutation();
   const moveToFolderMutation = trpc.chat.moveToFolder.useMutation();
   const moveToProjectMutation = trpc.chat.moveToProject.useMutation();
   const createProjectMutation = trpc.projects.create.useMutation();
@@ -73,6 +78,23 @@ export function ChatContextMenu({
       );
     }
     setShowDeleteConfirm(false);
+  };
+
+  const handleRename = async () => {
+    if (!newChatName.trim()) {
+      toast.error("Chat name cannot be empty");
+      return;
+    }
+    try {
+      await renameMutation.mutateAsync({ chatId, title: newChatName.trim() });
+      toast.success("Chat renamed successfully");
+      utils.chat.list.invalidate();
+      setShowRenameDialog(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to rename chat"
+      );
+    }
   };
 
   const handleMoveToFolder = async (folderId: number) => {
@@ -162,6 +184,16 @@ export function ChatContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent>
+          {/* Rename */}
+          <ContextMenuItem
+            onClick={() => setShowRenameDialog(true)}
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            <span>Rename</span>
+          </ContextMenuItem>
+
+          <ContextMenuSeparator />
+
           {/* Move to Project */}
           <ContextMenuSub>
             <ContextMenuSubTrigger>
@@ -230,6 +262,45 @@ export function ChatContextMenu({
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+
+      {/* Rename Dialog */}
+      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Chat</DialogTitle>
+            <DialogDescription>
+              Enter a new name for your chat.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Chat name"
+              value={newChatName}
+              onChange={(e) => setNewChatName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleRename();
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowRenameDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRename}
+              disabled={renameMutation.isPending}
+            >
+              {renameMutation.isPending ? "Renaming..." : "Rename"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>

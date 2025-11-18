@@ -41,6 +41,8 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { SearchBar } from "@/components/SearchBar";
 import { FolderDialog } from "@/components/FolderDialog";
 import { ChatContextMenu } from "@/components/ChatContextMenu";
+import { ProjectContextMenu } from "@/components/ProjectContextMenu";
+import { FolderContextMenu } from "@/components/FolderContextMenu";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
@@ -266,32 +268,25 @@ export function Sidebar({
                     projectsData.map((project) => {
                       const projectChats = organizedChats.byProject[project.id] || [];
                       return (
-                        <div key={project.id} className="space-y-1">
-                          <div className="flex items-center justify-between group px-3 rounded hover:bg-sidebar-accent cursor-pointer" onClick={() => onSelectProject(project.id)}>
-                            <div className="flex-1 flex items-center justify-start text-left text-sm text-sidebar-foreground truncate" title={project.name}>
-                              <Folder className="h-4 w-4 flex-shrink-0" />
-                              <span className="ml-3 truncate">{project.name}</span>
-                              <span className="ml-2 text-xs text-muted-foreground flex-shrink-0">({projectChats.length})</span>
+                        <ProjectContextMenu
+                          key={project.id}
+                          projectId={project.id}
+                          projectName={project.name}
+                          onRename={() => {
+                            // Trigger refetch - queries will auto-update via invalidation
+                          }}
+                          onDelete={() => {
+                            // Queries will auto-update via invalidation
+                          }}
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between group px-3 rounded hover:bg-sidebar-accent cursor-pointer" onClick={() => onSelectProject(project.id)}>
+                              <div className="flex-1 flex items-center justify-start text-left text-sm text-sidebar-foreground truncate" title={project.name}>
+                                <Folder className="h-4 w-4 flex-shrink-0" />
+                                <span className="ml-3 truncate">{project.name}</span>
+                                <span className="ml-2 text-xs text-muted-foreground flex-shrink-0">({projectChats.length})</span>
+                              </div>
                             </div>
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteDialogOpen({ type: "project", id: project.id });
-                              }}
-                              className="h-6 w-6 p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
-                              title="Delete project"
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  setDeleteDialogOpen({ type: "project", id: project.id });
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </div>
-                          </div>
                           {/* Project chats */}
                           {projectChats.length > 0 && (
                             <div className="ml-4 space-y-1">
@@ -319,7 +314,8 @@ export function Sidebar({
                               ))}
                             </div>
                           )}
-                        </div>
+                          </div>
+                        </ProjectContextMenu>
                       );
                     })
                   ) : (
@@ -356,32 +352,25 @@ export function Sidebar({
                     foldersData.map((folder) => {
                       const folderChats = organizedChats.byFolder[folder.id] || [];
                       return (
-                        <div key={folder.id} className="space-y-1">
-                          <div className="flex items-center justify-between group px-3 rounded hover:bg-sidebar-accent">
-                            <div className="flex-1 flex items-center justify-start text-left text-sm text-sidebar-foreground truncate" title={folder.name}>
-                              <Folder className="h-4 w-4 flex-shrink-0" />
-                              <span className="ml-3 truncate">{folder.name}</span>
-                              <span className="ml-2 text-xs text-muted-foreground flex-shrink-0">({folderChats.length})</span>
+                        <FolderContextMenu
+                          key={folder.id}
+                          folderId={folder.id}
+                          folderName={folder.name}
+                          onRename={() => {
+                            // Queries will auto-update via invalidation
+                          }}
+                          onDelete={() => {
+                            // Queries will auto-update via invalidation
+                          }}
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between group px-3 rounded hover:bg-sidebar-accent">
+                              <div className="flex-1 flex items-center justify-start text-left text-sm text-sidebar-foreground truncate" title={folder.name}>
+                                <Folder className="h-4 w-4 flex-shrink-0" />
+                                <span className="ml-3 truncate">{folder.name}</span>
+                                <span className="ml-2 text-xs text-muted-foreground flex-shrink-0">({folderChats.length})</span>
+                              </div>
                             </div>
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteDialogOpen({ type: "folder", id: folder.id });
-                              }}
-                              className="h-6 w-6 p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
-                              title="Delete folder"
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault();
-                                  setDeleteDialogOpen({ type: "folder", id: folder.id });
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </div>
-                          </div>
                           {/* Folder chats */}
                           {folderChats.length > 0 && (
                             <div className="ml-4 space-y-1">
@@ -409,7 +398,8 @@ export function Sidebar({
                               ))}
                             </div>
                           )}
-                        </div>
+                          </div>
+                        </FolderContextMenu>
                       );
                     })
                   ) : (
