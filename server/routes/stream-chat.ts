@@ -8,17 +8,34 @@ import { COOKIE_NAME } from "@shared/const";
 
 export const streamChatRouter = Router();
 
+// Enable credentials for streaming endpoint
+streamChatRouter.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+    return;
+  }
+  next();
+});
+
 streamChatRouter.post("/api/stream-chat", async (req, res) => {
   try {
     // Verify authentication
     const token = req.cookies[COOKIE_NAME];
+    console.log("[Stream Chat] Token present:", !!token);
     if (!token) {
+      console.error("[Stream Chat] No token in cookies");
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     const session = await sdk.verifySession(token);
+    console.log("[Stream Chat] Session verified:", !!session);
     if (!session || !session.openId) {
+      console.error("[Stream Chat] Invalid session");
       res.status(401).json({ error: "Invalid session" });
       return;
     }
@@ -30,22 +47,27 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
       return;
     }
 
-    const [dbUser] = await db
+    const dbUserResult = await db
       .select()
       .from(users)
       .where(eq(users.openId, session.openId))
-      .limit(1);
+      .limit(1)
+      .execute();
 
-    if (!dbUser) {
+    console.log("[DEBUG] dbUserResult:", dbUserResult);
+
+    if (!dbUserResult || dbUserResult.length === 0) {
       res.status(404).json({ error: "User not found" });
       return;
     }
 
+    const dbUser = dbUserResult[0];
     const userId = dbUser.id;
 
     const { chatId, model, content, title } = req.body;
 
     const user = dbUser;
+    console.log("[DEBUG] user:", user);
 
     const creditsNeeded = calculateCredits(model);
 
@@ -59,25 +81,31 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
     let finalChatId = chatId;
     if (!finalChatId) {
       const chatTitle = title || content.slice(0, 50);
-      const [newChat] = await db
+      const newChatResult = await db
         .insert(chats)
         .values({
           userId,
           title: chatTitle,
           model,
         })
-        .$returningId();
-      finalChatId = newChat.id;
+        .$returningId()
+        .execute();
+
+      console.log("[DEBUG] newChatResult:", newChatResult);
+      finalChatId = newChatResult[0].id;
     }
 
     // Verify chat belongs to user
-    const [chat] = await db
+    const chatResult = await db
       .select()
       .from(chats)
       .where(eq(chats.id, finalChatId))
-      .limit(1);
+      .limit(1)
+      .execute();
 
-    if (!chat || chat.userId !== userId) {
+    console.log("[DEBUG] chatResult:", chatResult);
+
+    if (!chatResult || chatResult.length === 0 || chatResult[0].userId !== userId) {
       res.status(403).json({ error: "Chat not found or access denied" });
       return;
     }
@@ -88,14 +116,17 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
       role: "user",
       content,
       creditsUsed: 0,
-    });
+    }).execute();
 
     // Get chat history
     const chatHistory = await db
       .select()
       .from(messages)
       .where(eq(messages.chatId, finalChatId))
-      .orderBy(asc(messages.createdAt));
+      .orderBy(asc(messages.createdAt))
+      .execute();
+
+    console.log("[DEBUG] chatHistory length:", chatHistory.length);
 
     // Prepare messages for OpenRouter
     const openRouterMessages: OpenRouterMessage[] = chatHistory.map((msg) => ({
@@ -126,14 +157,17 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
         role: "assistant",
         content: fullContent,
         creditsUsed: creditsNeeded,
-      });
+      }).execute();
 
       // Deduct credits
       const newBalance = user.credits - creditsNeeded;
       await db
         .update(users)
         .set({ credits: newBalance })
-        .where(eq(users.id, userId));
+        .where(eq(users.id, userId))
+        .execute();
+
+      console.log("[DEBUG] Credits deducted. New balance:", newBalance);
 
       // Send completion event
       res.write(
@@ -143,27 +177,21 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
           newBalance,
         })}\n\n`
       );
-
       res.end();
-    } catch (error) {
-      console.error("Streaming error:", error);
+    } catch (streamError) {
+      console.error("[Stream Chat] Streaming error:", streamError);
       res.write(
         `data: ${JSON.stringify({
           type: "error",
-          message: error instanceof Error ? error.message : "Streaming failed",
+          message: streamError instanceof Error ? streamError.message : "Streaming failed",
         })}\n\n`
       );
       res.end();
     }
   } catch (error) {
-    console.error("Stream chat error:", error);
-    if (error instanceof Error) {
-      console.error("Error stack:", error.stack);
-    }
-    if (!res.headersSent) {
-      res.status(500).json({
-        error: error instanceof Error ? error.message : "Internal server error",
-      });
-    }
+    console.error("[Stream Chat] Error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
   }
 });

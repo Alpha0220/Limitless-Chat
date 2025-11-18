@@ -33,15 +33,16 @@ export const projectsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const [project] = await db.insert(projects).values({
+      const result = await db.insert(projects).values({
         userId: ctx.user.id,
         name: input.name,
         description: input.description,
         color: input.color || "#3b82f6",
         icon: input.icon || "folder",
-      });
+      }).execute();
 
-      return { success: true, projectId: project.insertId };
+      console.log("[DEBUG] project insert result:", result);
+      return { success: true, projectId: (result as any).insertId || 0 };
     }),
 
   // Update a project

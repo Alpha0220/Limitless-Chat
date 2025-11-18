@@ -40,12 +40,12 @@
 - [ ] Implement streaming responses
 
 ## Features
-- [ ] User authentication and session management
-- [ ] Create new chat functionality
-- [ ] Save and load chat history
-- [ ] Search functionality for chats and notes
-- [ ] Folder management (create, rename, delete)
-- [ ] Chat organization (move to folder, delete)
+- [x] User authentication and session management
+- [x] Create new chat functionality
+- [x] Save and load chat history
+- [x] Search functionality for chats and notes
+- [x] Folder management (create, rename, delete)
+- [x] Chat organization (move to folder, delete)
 - [ ] Settings page for API keys
 
 ## Polish & Testing
@@ -264,3 +264,83 @@
 - [ ] Test Stripe checkout flow end-to-end
 - [ ] Configure Stripe webhook for payment success
 - [ ] Add Stripe test keys to environment
+
+## Bug Fixes - Critical Issues
+- [x] Chat history not displaying - messages not being saved/loaded (verified working)
+- [x] Insufficient credits message still showing after database credit update (frontend cache invalidation working)
+- [x] Toast message text color too light (need text-gray-600 or darker) - improved with darker text
+- [x] Verify chat message persistence in database (confirmed saving in stream-chat endpoint)
+
+## Error Message Improvements
+- [x] Fix "Failed to start streaming" error message to be more specific
+- [x] Add specific error for insufficient credits (already implemented in backend)
+- [x] Add specific error for authentication failures
+- [x] Add specific error for session expiration
+- [x] Display proper toast messages for each error type
+- [x] Add redirect link to Pricing page in insufficient credits error
+- [x] Fix toast description text color to be darker (now using text-gray-700 dark:text-gray-200)
+
+## Critical Issues - Credit System
+- [x] Fix sidebar credit balance not syncing with database (invalidate query on error)
+- [x] Fix insufficient credit detection - added frontend credit check before streaming
+- [x] Improve toast message details text color (use text-gray-600 dark:text-gray-300)
+- [x] Verify credit calculation is correct per model (updated MODEL_CREDITS in backend)
+- [x] Ensure pricing per token per model is calculated correctly (matches pricing page)
+
+## Drizzle Query Fixes
+- [x] Fix all Drizzle queries to use .execute() method
+- [x] Add [DEBUG] logging for user data queries
+- [x] Fix array result handling in all routers (use [0] indexing)
+- [x] Fix credits.ts queries with proper .execute()
+- [x] Fix stream-chat.ts queries with proper .execute()
+- [x] Fix db.ts helper functions with .execute()
+- [x] Fix chat.ts delete operations with .execute()
+- [x] Fix projects.ts insert with proper result handling
+- [x] Fix templates.ts insert with proper result handling
+- [x] Fix imageGeneration.ts queries with .execute()
+
+## Debug Balance Issues
+- [x] Check user credits in database (confirmed: user has 0 credits)
+- [x] Debug why balance.credits is always 0 (query works correctly, user initialized with 0)
+- [x] Add enhanced logging to getBalance query (detailed logging added)
+- [x] Show user's name in sidebar (displays name or email)
+- [x] Add signout AlertDialog button to sidebar (with confirmation dialog)
+
+## Toast Styling Fixes
+- [x] Fix insufficient credit toast description text styling (use descriptionClassName instead of CSS selector)
+
+## Sidebar Layout Fixes
+- [x] Fix text overflow in sidebar (truncate long text)
+- [x] Prevent horizontal scrolling in sidebar (added overflow-hidden)
+- [x] Separate scroll between sidebar and main chat section (ScrollArea for nav, fixed footer)
+- [x] Ensure user name and chat titles are properly truncated (added truncate class and title attr)
+
+## ProjectsSection Overflow Fix
+- [x] Fix PROJECTS section horizontal overflow (added overflow-hidden and truncate)
+- [x] Fix RECENT CHATS section horizontal overflow (already has truncate in Sidebar)
+- [x] Ensure create project button is clickable (added flex-shrink-0)
+- [x] Ensure delete chat button is clickable (added flex-shrink-0 and e.stopPropagation())
+
+## Visual Layout Adjustments
+- [x] Adjusted sidebar width from 358px to 255px for better balance
+- [x] Adjusted ProjectsSection width to 230px to match sidebar layout
+- [x] Adjusted navigation container heights for proper spacing
+
+## Sidebar Overflow Fix (md++ screens)
+- [x] Add overflow-hidden to ProjectsSection container
+- [x] Add overflow-hidden to Recent Chats container
+
+- [x] Add max-width constraint to sidebar (255px on md++ screens)
+
+- [x] Fix ProjectsSection internal layout to fit sidebar width (removed px-2, added w-full)
+- [x] Fix Recent Chats section internal layout to fit sidebar width (changed px-3 to px-0 on container, added px-3 to buttons)
+
+
+## New Features - Feature Branch (feature/core-functionality)
+- [ ] User authentication and session management
+- [ ] Create new chat functionality
+- [ ] Save and load chat history
+- [ ] Search functionality for chats and notes
+- [ ] Folder management (create, rename, delete)
+- [ ] Chat organization (move to folder, delete)
+- [ ] Settings page for API keys

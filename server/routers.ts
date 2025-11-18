@@ -5,6 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { creditsRouter } from "./routers/credits";
 import { chatRouter } from "./routers/chat";
 import { projectsRouter } from "./routers/projects";
+import { foldersRouter } from "./routers/folders";
 import { templatesRouter } from "./routers/templates";
 import { imageGenerationRouter } from "./routers/imageGeneration";
 import { stripeRouter } from "./routers/stripe";
@@ -27,6 +28,7 @@ export const appRouter = router({
   credits: creditsRouter,
   chat: chatRouter,
   projects: projectsRouter,
+  folders: foldersRouter,
   templates: templatesRouter,
   imageGeneration: imageGenerationRouter,
   stripe: stripeRouter,

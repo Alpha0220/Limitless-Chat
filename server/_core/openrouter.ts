@@ -45,15 +45,25 @@ export const MODEL_MAP: Record<string, string> = {
   "google/gemini-2.0-flash-001": "google/gemini-2.0-flash-001", // Direct mapping
 };
 
-// Credit costs per model (matches frontend)
+// Credit costs per model (matches frontend and pricing page)
 export const MODEL_CREDITS: Record<string, number> = {
+  "openai/gpt-5": 15,
+  "openai/gpt-5-pro": 25,
   "gpt-4": 10,
+  "anthropic/claude-opus-4.1": 20,
+  "anthropic/claude-sonnet-4.5": 12,
+  "anthropic/claude-sonnet-4": 10,
+  "anthropic/claude-haiku-4.5": 6,
+  "anthropic/claude-3.7-sonnet": 8,
+  "perplexity/sonar-pro": 8,
+  "perplexity/sonar": 3,
+  "google/gemini-2.0-flash-001": 2,
+  // Legacy mappings for backward compatibility
   "gpt-3.5-turbo": 3,
   "claude-3-opus": 8,
   "claude-3-sonnet": 5,
   "perplexity": 3,
   "gemini-pro": 2,
-  "google/gemini-2.0-flash-001": 2, // Gemini 2.0 Flash costs 2 credits
 };
 
 /**

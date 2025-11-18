@@ -70,7 +70,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
     await db.insert(users).values(values).onDuplicateKeyUpdate({
       set: updateSet,
-    });
+    }).execute();
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -84,7 +84,8 @@ export async function getUserByOpenId(openId: string) {
     return undefined;
   }
 
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1).execute();
+  console.log("[DEBUG] getUserByOpenId result:", result);
 
   return result.length > 0 ? result[0] : undefined;
 }

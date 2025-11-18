@@ -70,9 +70,9 @@ export function ProjectsSection({
   };
 
   return (
-    <div className="px-3 py-2">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+    <div className="overflow-hidden w-full">
+      <div className="flex items-center justify-between mb-2 overflow-hidden px-0">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider truncate">
           Projects
         </h3>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -80,7 +80,7 @@ export function ProjectsSection({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground flex-shrink-0"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -136,7 +136,7 @@ export function ProjectsSection({
         </Dialog>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1 overflow-hidden w-full">
         {/* All Chats option */}
         <button
           onClick={() => onSelectProject(null)}
@@ -147,8 +147,8 @@ export function ProjectsSection({
               : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
           )}
         >
-          <FolderOpen className="h-4 w-4" />
-          <span>All Chats</span>
+          <FolderOpen className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">All Chats</span>
         </button>
 
         {/* Projects list */}
@@ -156,7 +156,7 @@ export function ProjectsSection({
           <div
             key={project.id}
             className={cn(
-              "group flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors",
+              "group flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors overflow-hidden",
               selectedProjectId === project.id
                 ? "bg-accent text-accent-foreground"
                 : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -164,14 +164,18 @@ export function ProjectsSection({
           >
             <button
               onClick={() => onSelectProject(project.id)}
-              className="flex-1 flex items-center gap-2 text-left"
+              className="flex-1 flex items-center gap-2 text-left min-w-0"
             >
-              <FolderOpen className="h-4 w-4" style={{ color: project.color || "#3b82f6" }} />
+              <FolderOpen className="h-4 w-4 flex-shrink-0" style={{ color: project.color || "#3b82f6" }} />
               <span className="truncate">{project.name}</span>
             </button>
             <button
-              onClick={() => handleDeleteProject(project.id)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-accent rounded"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteProject(project.id);
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-accent rounded flex-shrink-0"
+              title="Delete project"
             >
               <Trash2 className="h-3 w-3" />
             </button>

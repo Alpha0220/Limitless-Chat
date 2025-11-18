@@ -39,16 +39,17 @@ export const templatesRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const [template] = await db.insert(promptTemplates).values({
+      const result = await db.insert(promptTemplates).values({
         userId: ctx.user.id,
         name: input.name,
         description: input.description,
         content: input.content,
         category: input.category,
         isPublic: input.isPublic ? 1 : 0,
-      });
+      }).execute();
 
-      return { success: true, templateId: template.insertId };
+      console.log("[DEBUG] template insert result:", result);
+      return { success: true, templateId: (result as any).insertId || 0 };
     }),
 
   // Update a template

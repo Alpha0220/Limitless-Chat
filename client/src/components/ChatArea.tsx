@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, Mic, Sparkles, Loader2 } from "lucide-react";
+import { Send, Paperclip, Mic, Sparkles, Loader2, Minimize2, Maximize2 } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
 interface Message {
   id: number;
@@ -20,6 +21,20 @@ interface ChatAreaProps {
   selectedModel: string;
   onChatCreated?: (chatId: number) => void;
 }
+
+const MODEL_CREDITS: Record<string, number> = {
+  "openai/gpt-5": 15,
+  "openai/gpt-5-pro": 25,
+  "gpt-4": 10,
+  "anthropic/claude-opus-4.1": 20,
+  "anthropic/claude-sonnet-4.5": 12,
+  "anthropic/claude-sonnet-4": 10,
+  "anthropic/claude-haiku-4.5": 6,
+  "anthropic/claude-3.7-sonnet": 8,
+  "perplexity/sonar-pro": 8,
+  "perplexity/sonar": 3,
+  "google/gemini-2.0-flash-001": 2,
+};
 
 const suggestedPrompts = [
   {
@@ -41,7 +56,10 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [showMinMaxButton, setShowMinMaxButton] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const utils = trpc.useUtils();
 
   // Fetch messages for current chat
@@ -49,6 +67,9 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
     { chatId: chatId! },
     { enabled: !!chatId }
   );
+
+  // Fetch current user's credit balance
+  const { data: creditBalance } = trpc.credits.getBalance.useQuery();
 
   // Update local messages when data changes
   useEffect(() => {
@@ -66,10 +87,45 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
     }
   }, [messages, streamingContent]);
 
+  // Check if textarea height exceeds 2.5rem (40px)
+  useEffect(() => {
+    const checkTextareaHeight = () => {
+      if (textareaRef.current) {
+        const height = textareaRef.current.scrollHeight;
+        const minHeight = 40; // 2.5rem = 40px
+        setShowMinMaxButton(height > minHeight);
+      }
+    };
+
+    // Check on mount and when input changes
+    checkTextareaHeight();
+    const interval = setInterval(checkTextareaHeight, 100);
+    
+    return () => clearInterval(interval);
+  }, [input]);
+
   const handleSendStreaming = async () => {
     if (!input.trim() || isStreaming) return;
 
     const messageContent = input;
+    const creditsNeeded = MODEL_CREDITS[selectedModel] || 10;
+
+    // Check if user has enough credits (frontend check)
+    if (creditBalance && creditBalance.credits < creditsNeeded) {
+      toast.error("Insufficient credits", {
+        description: `You need ${creditsNeeded} credits for this model. You have ${creditBalance.credits} credits.`,
+        descriptionClassName: "text-gray-600 dark:text-gray-300",
+        action: {
+          label: "Buy Credits",
+          onClick: () => {
+            window.location.href = "/pricing";
+          },
+        },
+        duration: 5000,
+      });
+      return;
+    }
+
     setInput("");
     setIsStreaming(true);
     setStreamingContent("");
@@ -98,7 +154,44 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
       });
 
       if (!response.ok) {
-        throw new Error("Failed to start streaming");
+        // Parse error response to provide specific error message
+        let errorMessage = "Failed to start streaming";
+        let errorData: any = null;
+        try {
+          errorData = await response.json();
+          if (errorData.error === "Insufficient credits") {
+            errorMessage = "You don't have enough credits. Please buy more credits.";
+            // Show toast with action button for insufficient credits
+            toast.error("Insufficient credits", {
+              description: "You need more credits to continue. Click to buy credits.",
+              descriptionClassName: "text-gray-600 dark:text-gray-300",
+              action: {
+                label: "Buy Credits",
+                onClick: () => {
+                  window.location.href = "/pricing";
+                },
+              },
+              duration: 5000,
+            });
+            return;
+          } else if (errorData.error === "Invalid session") {
+            errorMessage = "Your session has expired. Please refresh the page.";
+          } else if (errorData.error === "Unauthorized") {
+            errorMessage = "Authentication failed. Please log in again.";
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If response is not JSON, use status code
+          if (response.status === 401) {
+            errorMessage = "Authentication failed. Please log in again.";
+          } else if (response.status === 403) {
+            errorMessage = "You don't have permission to perform this action.";
+          } else if (response.status === 400) {
+            errorMessage = "Invalid request. Please try again.";
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const reader = response.body?.getReader();
@@ -150,7 +243,9 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
                 utils.chat.list.invalidate();
                 utils.credits.getBalance.invalidate();
 
-                toast.success(`Response received! ${parsed.creditsUsed} credits used.`);
+                toast.success(`Response received! ${parsed.creditsUsed} credits used.`, {
+                  className: "[&>div:nth-child(2)]:text-gray-600 dark:[&>div:nth-child(2)]:text-gray-300",
+                });
               } else if (parsed.type === "error") {
                 throw new Error(parsed.message);
               }
@@ -162,9 +257,13 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
         }
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to send message");
+      toast.error(error instanceof Error ? error.message : "Failed to send message", {
+        className: "[&>div:nth-child(2)]:text-gray-600 dark:[&>div:nth-child(2)]:text-gray-300",
+      });
       // Remove optimistic user message on error
       setLocalMessages((prev) => prev.slice(0, -1));
+      // Invalidate credits on error too (in case partial deduction occurred)
+      utils.credits.getBalance.invalidate();
     } finally {
       setIsStreaming(false);
       setStreamingContent("");
@@ -193,7 +292,7 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
   return (
     <div className="flex-1 flex flex-col h-full">
       {/* Messages Area */}
-      <ScrollArea className="flex-1 px-4 py-6" ref={scrollRef}>
+      <ScrollArea className="flex-1 px-4 py-6 max-h-[calc(100vh-130px)]" ref={scrollRef}>
         {messages.length === 0 && !streamingContent && (
           <div className="flex flex-col items-center justify-center h-full max-w-3xl mx-auto">
             {/* Model Icon */}
@@ -210,116 +309,105 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
             <div className="w-full space-y-3">
               <div className="flex items-center gap-2 text-muted-foreground mb-4">
                 <Sparkles className="h-4 w-4" />
-                <span className="text-sm font-medium">Suggested</span>
+                <span className="text-sm">Suggested</span>
               </div>
-
               {suggestedPrompts.map((prompt, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestedPrompt(prompt)}
-                  className="w-full text-left p-3 md:p-4 rounded-xl bg-card hover:bg-accent transition-colors border border-border shadow-sm touch-manipulation"
+                  className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent transition-colors"
                 >
-                  <div className="font-medium text-foreground">{prompt.title}</div>
-                  <div className="text-sm text-muted-foreground mt-1">{prompt.description}</div>
+                  <div className="font-medium text-sm text-foreground">{prompt.title}</div>
+                  <div className="text-xs text-muted-foreground">{prompt.description}</div>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Messages */}
-        <div className="max-w-3xl mx-auto space-y-6">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex",
-                message.role === "user" ? "justify-end" : "justify-start"
-              )}
-            >
-              <div
-                className={cn(
-                  "max-w-[85%] md:max-w-[80%] rounded-2xl px-3 md:px-4 py-2 md:py-3 text-sm md:text-base shadow-sm",
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-card-foreground border border-border"
-                )}
-              >
-                <Streamdown>{message.content}</Streamdown>
-                {message.role === "assistant" && message.creditsUsed !== undefined && (
-                  <div className="text-xs text-muted-foreground mt-2">
-                    {message.creditsUsed} credits used
-                  </div>
-                )}
-              </div>
+        {/* TODO: Mock messages for testing */}
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-start">
+            <div className="max-w-[80%] md:max-w-[70%] rounded-lg px-4 py-3 bg-muted text-foreground rounded-bl-none border border-border">
+              {Array.from({ length: 20 }).map((_, index) => (
+                <Streamdown key={index}>Hello, how can I help you today? This is a mock message for testing.</Streamdown>
+              ))}
             </div>
-          ))}
-
-          {/* Streaming message */}
-          {streamingContent && (
-            <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-card text-card-foreground border border-border shadow-sm">
-                <Streamdown>{streamingContent}</Streamdown>
-                <div className="flex items-center gap-1 mt-2">
-                  <Loader2 className="h-3 w-3 animate-spin text-gray-400" />
-                  <span className="text-xs text-muted-foreground">Generating...</span>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
+
+        {/* Streaming Content */}
+        {streamingContent && (
+          <div className="flex mb-4 justify-start">
+            <div className="max-w-[80%] md:max-w-[70%] rounded-lg px-4 py-3 bg-muted text-foreground rounded-bl-none border border-border">
+              <Streamdown>{streamingContent}</Streamdown>
+            </div>
+          </div>
+        )}
       </ScrollArea>
 
-      {/* Input Area */}
-      <div className="border-t border-border bg-background p-3 md:p-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="relative bg-input rounded-2xl border border-border shadow-sm">
-            <div className="flex items-end gap-1 md:gap-2 p-2 md:p-3">
+      {/* Input Area - Fixed at bottom, textarea grows upward up to 50vh */}
+      <div className="absolute bottom-0 z-10 w-full border-t border-border bg-background p-4 flex-shrink-0">
+        <div className="flex gap-2 max-w-4xl mx-auto items-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground flex-shrink-0"
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
+
+          <div className="flex-1 relative">
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="How can I help you today?"
+              className={cn(
+                "w-full resize-none overflow-y-auto min-h-[2.5rem]",
+                isMinimized ? "max-h-[2.5rem]" : "max-h-[50vh]"
+              )}
+              rows={1}
+            />
+            {/* Minimize/Maximize Button */}
+            {showMinMaxButton && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-muted-foreground hover:text-foreground shrink-0 h-9 w-9 md:h-10 md:w-10"
+                className="absolute top-2 right-4 h-6 w-6 text-slate-500 bg-slate-100 hover:text-white hover:bg-primary/50"
+                onClick={() => setIsMinimized(!isMinimized)}
+                title={isMinimized ? "Maximize" : "Minimize"}
               >
-                <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
+                {isMinimized ? (
+                  <Maximize2 className="h-4 w-4" />
+                ) : (
+                  <Minimize2 className="h-4 w-4" />
+                )}
               </Button>
-
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="How can I help you today?"
-                className="min-h-[24px] max-h-[200px] resize-none border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm md:text-base"
-                rows={1}
-              />
-
-              <div className="flex items-center gap-1 md:gap-2 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground h-9 w-9 md:h-10 md:w-10"
-                >
-                  <Mic className="h-4 w-4 md:h-5 md:w-5" />
-                </Button>
-
-                <Button
-                  onClick={handleSendStreaming}
-                  disabled={!input.trim() || isStreaming}
-                  size="icon"
-                  className="bg-blue-600 hover:bg-blue-700 text-white h-9 w-9 md:h-10 md:w-10"
-                >
-                  {isStreaming ? (
-                    <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4 md:h-5 md:w-5" />
-                  )}
-                </Button>
-              </div>
-            </div>
+            )}
           </div>
 
-          <p className="text-xs text-gray-500 text-center mt-2">
-            Press Enter to send, Shift+Enter for new line
-          </p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground flex-shrink-0"
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
+
+          <Button
+            onClick={handleSendStreaming}
+            disabled={isStreaming || !input.trim()}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
+            size="icon"
+          >
+            {isStreaming ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
+          </Button>
         </div>
       </div>
     </div>

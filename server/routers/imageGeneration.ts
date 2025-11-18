@@ -31,14 +31,17 @@ export const imageGenerationRouter = router({
       }
 
       // Check if user has enough credits
-      const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+      const userResult = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1).execute();
+      console.log("[DEBUG] imageGeneration user:", userResult);
       
-      if (!user) {
+      if (!userResult || userResult.length === 0) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "User not found",
         });
       }
+
+      const user = userResult[0];
 
       if (user.credits < IMAGE_GENERATION_COST) {
         throw new TRPCError({
@@ -58,7 +61,8 @@ export const imageGenerationRouter = router({
         await db
           .update(users)
           .set({ credits: user.credits - IMAGE_GENERATION_COST })
-          .where(eq(users.id, ctx.user.id));
+          .where(eq(users.id, ctx.user.id))
+          .execute();
 
         // Save generated image record
         await db.insert(generatedImages).values({
@@ -70,7 +74,7 @@ export const imageGenerationRouter = router({
           width: result.width,
           height: result.height,
           creditsUsed: IMAGE_GENERATION_COST,
-        });
+        }).execute();
 
         return {
           success: true,

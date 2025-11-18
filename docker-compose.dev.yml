@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # MySQL/TiDB Database
+  db:
+    image: mysql:8.0
+    container_name: limitless-chat-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_dev
+      MYSQL_DATABASE: limitless_chat
+      MYSQL_USER: limitless_user
+      MYSQL_PASSWORD: limitless_password_dev
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - limitless-chat-dev
+    restart: unless-stopped
+
+  # Backend Node.js Server
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: limitless-chat-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: mysql://limitless_user:limitless_password_dev@db:3306/limitless_chat
+      JWT_SECRET: dev-secret-key-change-in-production
+      VITE_APP_ID: ${VITE_APP_ID:-dev-app-id}
+      OAUTH_SERVER_URL: ${OAUTH_SERVER_URL:-https://api.manus.im}
+      VITE_OAUTH_PORTAL_URL: ${VITE_OAUTH_PORTAL_URL:-https://auth.manus.im}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      BUILT_IN_FORGE_API_KEY: ${BUILT_IN_FORGE_API_KEY:-}
+      BUILT_IN_FORGE_API_URL: ${BUILT_IN_FORGE_API_URL:-}
+      VITE_FRONTEND_FORGE_API_KEY: ${VITE_FRONTEND_FORGE_API_KEY:-}
+      VITE_FRONTEND_FORGE_API_URL: ${VITE_FRONTEND_FORGE_API_URL:-}
+      OWNER_OPEN_ID: ${OWNER_OPEN_ID:-}
+      OWNER_NAME: ${OWNER_NAME:-}
+      VITE_APP_TITLE: Limitless Chat
+      VITE_APP_LOGO: /logo.svg
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      FAL_AI_API_KEY: ${FAL_AI_API_KEY:-}
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - limitless-chat-dev
+    restart: unless-stopped
+    command: pnpm dev
+
+  # Frontend Nginx Server (DISABLED - for testing production build only)
+  # The backend serves the frontend via Vite dev server with hot-reload in development mode
+  # Access the app at http://localhost:3000 (backend port) for live code changes
+  # Uncomment below only if you want to test production build
+  # frontend:
+  #   image: nginx:alpine
+  #   container_name: limitless-chat-frontend
+  #   ports:
+  #     - "5173:80"
+  #   volumes:
+  #     - ./dist/public:/var/www/limitless-chat:ro
+  #     - ./nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - limitless-chat-dev
+  #   restart: unless-stopped
+
+networks:
+  limitless-chat-dev:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local

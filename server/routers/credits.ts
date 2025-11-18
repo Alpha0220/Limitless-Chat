@@ -10,12 +10,25 @@ export const creditsRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database not available");
 
-    const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+    console.log("[DEBUG] getBalance - ctx.user.id:", ctx.user.id);
+    console.log("[DEBUG] getBalance - ctx.user:", ctx.user);
+    const user = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1).execute();
+    console.log("[DEBUG] getBalance - user query result:", JSON.stringify(user, null, 2));
+    console.log("[DEBUG] getBalance - user[0]:", user[0]);
+    console.log("[DEBUG] getBalance - user[0]?.credits:", user[0]?.credits);
+    console.log("[DEBUG] getBalance - user[0]?.billingType:", user[0]?.billingType);
     
-    return {
-      credits: user?.credits || 0,
-      billingType: user?.billingType || "prepaid",
+    if (!user || user.length === 0) {
+      console.error("[DEBUG] getBalance - User not found for id:", ctx.user.id);
+      throw new Error("User not found");
+    }
+    
+    const result = {
+      credits: user[0].credits ?? 0,
+      billingType: user[0].billingType ?? "prepaid",
     };
+    console.log("[DEBUG] getBalance - returning:", result);
+    return result;
   }),
 
   // Get credit transaction history
@@ -36,7 +49,8 @@ export const creditsRouter = router({
         .where(eq(creditTransactions.userId, ctx.user.id))
         .orderBy(desc(creditTransactions.createdAt))
         .limit(input.limit)
-        .offset(input.offset);
+        .offset(input.offset)
+        .execute();
 
       return transactions;
     }),
@@ -49,7 +63,8 @@ export const creditsRouter = router({
     const tiers = await db
       .select()
       .from(pricingTiers)
-      .where(eq(pricingTiers.isActive, true));
+      .where(eq(pricingTiers.isActive, true))
+      .execute();
 
     return tiers;
   }),
@@ -67,23 +82,27 @@ export const creditsRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database not available");
 
-      const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+      const user = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1).execute();
+      console.log("[DEBUG] deductCredits user:", user[0]);
 
-      if (!user) {
+      if (!user || user.length === 0) {
         throw new Error("User not found");
       }
 
+      const userData = user[0];
+
       // Check if user has enough credits
-      if (user.billingType === "prepaid" && user.credits < input.amount) {
+      if (userData.billingType === "prepaid" && userData.credits < input.amount) {
         throw new Error("Insufficient credits");
       }
 
       // Deduct credits
-      const newBalance = user.credits - input.amount;
+      const newBalance = userData.credits - input.amount;
       await db
         .update(users)
         .set({ credits: newBalance })
-        .where(eq(users.id, ctx.user.id));
+        .where(eq(users.id, ctx.user.id))
+        .execute();
 
       // Record transaction
       await db.insert(creditTransactions).values({
@@ -93,12 +112,12 @@ export const creditsRouter = router({
         balanceAfter: newBalance,
         description: input.description,
         messageId: input.messageId,
-      });
+      }).execute();
 
       // For pay-as-you-go users, track monthly usage
-      if (user.billingType === "payg") {
+      if (userData.billingType === "payg") {
         const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-        const [existingBilling] = await db
+        const existingBilling = await db
           .select()
           .from(monthlyBilling)
           .where(
@@ -107,15 +126,17 @@ export const creditsRouter = router({
               eq(monthlyBilling.month, currentMonth)
             )
           )
-          .limit(1);
+          .limit(1)
+          .execute();
 
-        if (existingBilling) {
+        if (existingBilling && existingBilling.length > 0) {
           await db
             .update(monthlyBilling)
             .set({
-              creditsUsed: existingBilling.creditsUsed + input.amount,
+              creditsUsed: existingBilling[0].creditsUsed + input.amount,
             })
-            .where(eq(monthlyBilling.id, existingBilling.id));
+            .where(eq(monthlyBilling.id, existingBilling[0].id))
+            .execute();
         } else {
           await db.insert(monthlyBilling).values({
             userId: ctx.user.id,
@@ -123,7 +144,7 @@ export const creditsRouter = router({
             creditsUsed: input.amount,
             amountCharged: "0.00",
             status: "pending",
-          });
+          }).execute();
         }
       }
 
@@ -139,7 +160,7 @@ export const creditsRouter = router({
     if (!db) throw new Error("Database not available");
 
     const currentMonth = new Date().toISOString().slice(0, 7);
-    const [billing] = await db
+    const billing = await db
       .select()
       .from(monthlyBilling)
       .where(
@@ -148,13 +169,14 @@ export const creditsRouter = router({
           eq(monthlyBilling.month, currentMonth)
         )
       )
-      .limit(1);
+      .limit(1)
+      .execute();
 
     return {
       month: currentMonth,
-      creditsUsed: billing?.creditsUsed || 0,
-      amountCharged: billing?.amountCharged || "0.00",
-      status: billing?.status || "pending",
+      creditsUsed: billing[0]?.creditsUsed || 0,
+      amountCharged: billing[0]?.amountCharged || "0.00",
+      status: billing[0]?.status || "pending",
     };
   }),
 
@@ -172,7 +194,8 @@ export const creditsRouter = router({
       await db
         .update(users)
         .set({ billingType: input.billingType })
-        .where(eq(users.id, ctx.user.id));
+        .where(eq(users.id, ctx.user.id))
+        .execute();
 
       return {
         success: true,

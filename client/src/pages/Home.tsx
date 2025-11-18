@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ChatArea } from "@/components/ChatArea";
@@ -7,6 +6,7 @@ import { getLoginUrl } from "@/const";
 import { Menu, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -62,9 +62,9 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col relative">
         {/* Header with Model Switcher */}
-        <header className="h-14 border-b border-border bg-background flex items-center justify-between px-4">
+        <header className="h-14 sticky top-0 z-10 border-b border-border bg-background flex items-center justify-between px-4">
           {/* Hamburger menu for mobile */}
           <Button
             variant="ghost"
