@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -32,6 +31,7 @@ import { Folder, Trash2, FolderPlus, Plus, Pencil } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface ChatContextMenuProps {
   chatId: number;
@@ -79,7 +79,6 @@ export function ChatContextMenu({
     }
     setShowDeleteConfirm(false);
   };
-
   const handleRename = async () => {
     if (!newChatName.trim()) {
       toast.error("Chat name cannot be empty");
@@ -159,7 +158,13 @@ export function ChatContextMenu({
       const newProject = await createProjectMutation.mutateAsync({
         name: newProjectName,
       });
-      toast.success("Project created successfully");
+      
+      // Move chat to the newly created project
+      if (newProject.projectId) {
+        await handleMoveToProject(newProject.projectId);
+      }
+      
+      toast.success("Project created and chat moved successfully");
       utils.projects.list.invalidate();
       setNewProjectName("");
       setShowNewProjectDialog(false);
@@ -179,7 +184,13 @@ export function ChatContextMenu({
       const newFolder = await createFolderMutation.mutateAsync({
         name: newFolderName,
       });
-      toast.success("Folder created successfully");
+      
+      // Move chat to the newly created folder
+      if (newFolder.folderId) {
+        await handleMoveToFolder(newFolder.folderId);
+      }
+      
+      toast.success("Folder created and chat moved successfully");
       utils.folders.list.invalidate();
       setNewFolderName("");
       setShowNewFolderDialog(false);

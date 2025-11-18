@@ -393,3 +393,8 @@
 - [x] Fix chat move from project to recent chats not working (clear project first)
 - [x] Fix chat move from project to folder not working (clear project first)
 - [x] Ensure all move operations properly clear previous location (implemented in all move handlers)
+
+## Bug Fixes - Create and Move Chat
+- [x] Fix chat not moving to newly created project (now moves after creation)
+- [x] Fix chat not moving to newly created folder (now moves after creation)
+- [x] Ensure created project/folder ID is captured and used for move (implemented)
