@@ -398,3 +398,8 @@
 - [x] Fix chat not moving to newly created project (now moves after creation)
 - [x] Fix chat not moving to newly created folder (now moves after creation)
 - [x] Ensure created project/folder ID is captured and used for move (implemented)
+
+## Bug Fixes - Project Create and Move
+- [x] Fix project not refreshing after create and move (added explicit invalidation)
+- [x] Ensure project queries invalidate properly after move (added after move completes)
+- [x] Debug why project sidebar doesn't update with moved chat (fixed query invalidation timing)

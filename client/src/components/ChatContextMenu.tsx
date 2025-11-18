@@ -174,6 +174,9 @@ export function ChatContextMenu({
         console.log("[DEBUG] Moving chat to project:", newProject.projectId);
         await handleMoveToProject(newProject.projectId);
         console.log("[DEBUG] Chat moved successfully");
+        // Ensure queries are invalidated after move
+        await utils.chat.list.invalidate();
+        await utils.projects.list.invalidate();
       } else {
         console.warn("[DEBUG] No projectId in response:", newProject);
       }
@@ -206,6 +209,9 @@ export function ChatContextMenu({
         console.log("[DEBUG] Moving chat to folder:", newFolder.folderId);
         await handleMoveToFolder(newFolder.folderId);
         console.log("[DEBUG] Chat moved successfully");
+        // Ensure queries are invalidated after move
+        await utils.chat.list.invalidate();
+        await utils.folders.list.invalidate();
       } else {
         console.warn("[DEBUG] No folderId in response:", newFolder);
       }
