@@ -382,3 +382,8 @@
 - [x] Create context menu component for folders with rename/delete
 - [x] Update chat context menu with rename/move/delete options
 - [x] Integrate all context menus into Sidebar
+
+## Bug Fixes - Missing Procedures
+- [x] Fix "No procedure found on path projects.rename" error (restarted dev server)
+- [x] Fix "No procedure found on path folders.rename" error (restarted dev server)
+- [x] Verify all rename mutations are properly exported in main router
