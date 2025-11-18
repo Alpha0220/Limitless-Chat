@@ -261,29 +261,30 @@ export function Sidebar({
                       const projectChats = organizedChats.byProject[project.id] || [];
                       return (
                         <div key={project.id} className="space-y-1">
-                          <div className="flex items-center justify-between group px-3">
-                            <Button
-                              variant="ghost"
-                              className="flex-1 justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate"
-                              title={project.name}
-                              onClick={() => onSelectProject(project.id)}
-                            >
+                          <div className="flex items-center justify-between group px-3 rounded hover:bg-sidebar-accent cursor-pointer" onClick={() => onSelectProject(project.id)}>
+                            <div className="flex-1 flex items-center justify-start text-left text-sm text-sidebar-foreground truncate" title={project.name}>
                               <Folder className="h-4 w-4 flex-shrink-0" />
                               <span className="ml-3 truncate">{project.name}</span>
                               <span className="ml-2 text-xs text-muted-foreground flex-shrink-0">({projectChats.length})</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            </div>
+                            <div
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDeleteDialogOpen({ type: "project", id: project.id });
                               }}
-                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-6 w-6 p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
                               title="Delete project"
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setDeleteDialogOpen({ type: "project", id: project.id });
+                                }
+                              }}
                             >
                               <Trash2 className="h-4 w-4" />
-                            </Button>
+                            </div>
                           </div>
                           {/* Project chats */}
                           {projectChats.length > 0 && (
@@ -344,28 +345,30 @@ export function Sidebar({
                       const folderChats = organizedChats.byFolder[folder.id] || [];
                       return (
                         <div key={folder.id} className="space-y-1">
-                          <div className="flex items-center justify-between group px-3">
-                            <Button
-                              variant="ghost"
-                              className="flex-1 justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate"
-                              title={folder.name}
-                            >
+                          <div className="flex items-center justify-between group px-3 rounded hover:bg-sidebar-accent">
+                            <div className="flex-1 flex items-center justify-start text-left text-sm text-sidebar-foreground truncate" title={folder.name}>
                               <Folder className="h-4 w-4 flex-shrink-0" />
                               <span className="ml-3 truncate">{folder.name}</span>
                               <span className="ml-2 text-xs text-muted-foreground flex-shrink-0">({folderChats.length})</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            </div>
+                            <div
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDeleteDialogOpen({ type: "folder", id: folder.id });
                               }}
-                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-6 w-6 p-1 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
                               title="Delete folder"
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setDeleteDialogOpen({ type: "folder", id: folder.id });
+                                }
+                              }}
                             >
                               <Trash2 className="h-4 w-4" />
-                            </Button>
+                            </div>
                           </div>
                           {/* Folder chats */}
                           {folderChats.length > 0 && (

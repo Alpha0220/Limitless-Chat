@@ -368,3 +368,8 @@
 - [x] Fix "Rendered more hooks than during previous render" error in Sidebar
 - [x] Refactor to fetch all chats once instead of per-project/folder
 - [x] Organize chats client-side to avoid conditional hook calls
+
+## Bug Fixes - Nested Button Error
+- [x] Fix "<button> cannot contain a nested <button>" error in Sidebar
+- [x] Refactor project/folder items to use div instead of nested buttons
+- [x] Ensure delete button is accessible without nesting
