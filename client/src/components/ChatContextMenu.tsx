@@ -98,16 +98,20 @@ export function ChatContextMenu({
 
   const handleMoveToFolder = async (folderId: number) => {
     try {
+      console.log("[DEBUG] handleMoveToFolder called with folderId:", folderId);
       // First clear project if it has one
       await moveToProjectMutation.mutateAsync({ chatId, projectId: undefined });
+      console.log("[DEBUG] Project cleared");
       // Then move to folder
       await moveToFolderMutation.mutateAsync({ chatId, folderId });
+      console.log("[DEBUG] Chat moved to folder");
       toast.success("Chat moved to folder successfully");
       utils.chat.list.invalidate();
       utils.folders.list.invalidate();
       utils.projects.list.invalidate();
       onMove?.();
     } catch (error) {
+      console.error("[DEBUG] Error in handleMoveToFolder:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to move chat"
       );
@@ -133,16 +137,20 @@ export function ChatContextMenu({
 
   const handleMoveToProject = async (projectId: number) => {
     try {
+      console.log("[DEBUG] handleMoveToProject called with projectId:", projectId);
       // First clear folder if it has one
       await moveToFolderMutation.mutateAsync({ chatId, folderId: undefined });
+      console.log("[DEBUG] Folder cleared");
       // Then move to project
       await moveToProjectMutation.mutateAsync({ chatId, projectId });
+      console.log("[DEBUG] Chat moved to project");
       toast.success("Chat moved to project successfully");
       utils.chat.list.invalidate();
       utils.projects.list.invalidate();
       utils.folders.list.invalidate();
       onMove?.();
     } catch (error) {
+      console.error("[DEBUG] Error in handleMoveToProject:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to move chat"
       );
@@ -155,20 +163,26 @@ export function ChatContextMenu({
       return;
     }
     try {
+      console.log("[DEBUG] Creating project:", newProjectName);
       const newProject = await createProjectMutation.mutateAsync({
         name: newProjectName,
       });
+      console.log("[DEBUG] Project created:", newProject);
       
       // Move chat to the newly created project
-      if (newProject.projectId) {
+      if (newProject?.projectId) {
+        console.log("[DEBUG] Moving chat to project:", newProject.projectId);
         await handleMoveToProject(newProject.projectId);
+        console.log("[DEBUG] Chat moved successfully");
+      } else {
+        console.warn("[DEBUG] No projectId in response:", newProject);
       }
       
       toast.success("Project created and chat moved successfully");
-      utils.projects.list.invalidate();
       setNewProjectName("");
       setShowNewProjectDialog(false);
     } catch (error) {
+      console.error("[DEBUG] Error in handleCreateNewProject:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to create project"
       );
@@ -181,20 +195,26 @@ export function ChatContextMenu({
       return;
     }
     try {
+      console.log("[DEBUG] Creating folder:", newFolderName);
       const newFolder = await createFolderMutation.mutateAsync({
         name: newFolderName,
       });
+      console.log("[DEBUG] Folder created:", newFolder);
       
       // Move chat to the newly created folder
-      if (newFolder.folderId) {
+      if (newFolder?.folderId) {
+        console.log("[DEBUG] Moving chat to folder:", newFolder.folderId);
         await handleMoveToFolder(newFolder.folderId);
+        console.log("[DEBUG] Chat moved successfully");
+      } else {
+        console.warn("[DEBUG] No folderId in response:", newFolder);
       }
       
       toast.success("Folder created and chat moved successfully");
-      utils.folders.list.invalidate();
       setNewFolderName("");
       setShowNewFolderDialog(false);
     } catch (error) {
+      console.error("[DEBUG] Error in handleCreateNewFolder:", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to create folder"
       );
