@@ -18,9 +18,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Folder, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Folder, Trash2, FolderPlus, Plus } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface ChatContextMenuProps {
   chatId: number;
@@ -36,8 +46,18 @@ export function ChatContextMenu({
   onMove,
 }: ChatContextMenuProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
+  const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newFolderName, setNewFolderName] = useState("");
+  
   const deleteMutation = trpc.chat.delete.useMutation();
   const moveToFolderMutation = trpc.chat.moveToFolder.useMutation();
+  const moveToProjectMutation = trpc.chat.moveToProject.useMutation();
+  const createProjectMutation = trpc.projects.create.useMutation();
+  const createFolderMutation = trpc.folders.create.useMutation();
+  
+  const projectsQuery = trpc.projects.list.useQuery();
   const foldersQuery = trpc.folders.list.useQuery();
   const utils = trpc.useUtils();
 
@@ -58,7 +78,7 @@ export function ChatContextMenu({
   const handleMoveToFolder = async (folderId: number) => {
     try {
       await moveToFolderMutation.mutateAsync({ chatId, folderId });
-      toast.success("Chat moved successfully");
+      toast.success("Chat moved to folder successfully");
       utils.chat.list.invalidate();
       utils.folders.list.invalidate();
       onMove?.();
@@ -83,17 +103,103 @@ export function ChatContextMenu({
     }
   };
 
+  const handleMoveToProject = async (projectId: number) => {
+    try {
+      await moveToProjectMutation.mutateAsync({ chatId, projectId });
+      toast.success("Chat moved to project successfully");
+      utils.chat.list.invalidate();
+      utils.projects.list.invalidate();
+      onMove?.();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to move chat"
+      );
+    }
+  };
+
+  const handleCreateNewProject = async () => {
+    if (!newProjectName.trim()) {
+      toast.error("Project name cannot be empty");
+      return;
+    }
+    try {
+      const newProject = await createProjectMutation.mutateAsync({
+        name: newProjectName,
+      });
+      toast.success("Project created successfully");
+      utils.projects.list.invalidate();
+      setNewProjectName("");
+      setShowNewProjectDialog(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create project"
+      );
+    }
+  };
+
+  const handleCreateNewFolder = async () => {
+    if (!newFolderName.trim()) {
+      toast.error("Folder name cannot be empty");
+      return;
+    }
+    try {
+      const newFolder = await createFolderMutation.mutateAsync({
+        name: newFolderName,
+      });
+      toast.success("Folder created successfully");
+      utils.folders.list.invalidate();
+      setNewFolderName("");
+      setShowNewFolderDialog(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create folder"
+      );
+    }
+  };
+
   return (
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent>
+          {/* Move to Project */}
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              <span>Move to project</span>
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              <ContextMenuItem onClick={() => setShowNewProjectDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                New project
+              </ContextMenuItem>
+              {projectsQuery.data && projectsQuery.data.length > 0 && (
+                <>
+                  <ContextMenuSeparator />
+                  {projectsQuery.data.map((project) => (
+                    <ContextMenuItem
+                      key={project.id}
+                      onClick={() => handleMoveToProject(project.id)}
+                    >
+                      {project.name}
+                    </ContextMenuItem>
+                  ))}
+                </>
+              )}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+
+          {/* Move to Folder */}
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <Folder className="mr-2 h-4 w-4" />
               <span>Move to folder</span>
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
+              <ContextMenuItem onClick={() => setShowNewFolderDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                New folder
+              </ContextMenuItem>
               <ContextMenuItem onClick={handleMoveToRoot}>
                 Root (No folder)
               </ContextMenuItem>
@@ -125,6 +231,7 @@ export function ChatContextMenu({
         </ContextMenuContent>
       </ContextMenu>
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -144,6 +251,82 @@ export function ChatContextMenu({
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* New Project Dialog */}
+      <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Project</DialogTitle>
+            <DialogDescription>
+              Enter a name for your new project.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Project name"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleCreateNewProject();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowNewProjectDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateNewProject}
+              disabled={createProjectMutation.isPending}
+            >
+              {createProjectMutation.isPending ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Folder Dialog */}
+      <Dialog open={showNewFolderDialog} onOpenChange={setShowNewFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogDescription>
+              Enter a name for your new folder.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Folder name"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleCreateNewFolder();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowNewFolderDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateNewFolder}
+              disabled={createFolderMutation.isPending}
+            >
+              {createFolderMutation.isPending ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

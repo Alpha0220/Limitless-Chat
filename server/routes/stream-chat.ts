@@ -111,12 +111,18 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
     }
 
     // Save user message
-    await db.insert(messages).values({
-      chatId: finalChatId,
-      role: "user",
-      content,
-      creditsUsed: 0,
-    }).execute();
+    try {
+      const userMsgResult = await db.insert(messages).values({
+        chatId: finalChatId,
+        role: "user",
+        content,
+        creditsUsed: 0,
+      }).execute();
+      console.log("[DEBUG] User message saved:", userMsgResult);
+    } catch (msgError) {
+      console.error("[ERROR] Failed to save user message:", msgError);
+      throw msgError;
+    }
 
     // Get chat history
     const chatHistory = await db

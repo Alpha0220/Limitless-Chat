@@ -2,7 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { chats, messages, users } from "../../drizzle/schema";
-import { eq, desc, like, or, and } from "drizzle-orm";
+import { eq, desc, like, or, and, isNull } from "drizzle-orm";
 import { callOpenRouter, calculateCredits, streamOpenRouter, OpenRouterMessage } from "../_core/openrouter";
 import { TRPCError } from "@trpc/server";
 
@@ -47,6 +47,69 @@ export const chatRouter = router({
 
     return userChats;
   }),
+
+  // Get recent chats (without project or folder)
+  getRecent: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    const recentChats = await db
+      .select()
+      .from(chats)
+      .where(
+        and(
+          eq(chats.userId, ctx.user.id),
+          isNull(chats.projectId),
+          isNull(chats.folderId)
+        )
+      )
+      .orderBy(desc(chats.updatedAt))
+      .limit(50);
+
+    return recentChats;
+  }),
+
+  // Get chats in a specific project
+  getByProject: protectedProcedure
+    .input(z.object({ projectId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const projectChats = await db
+        .select()
+        .from(chats)
+        .where(
+          and(
+            eq(chats.userId, ctx.user.id),
+            eq(chats.projectId, input.projectId)
+          )
+        )
+        .orderBy(desc(chats.updatedAt));
+
+      return projectChats;
+    }),
+
+  // Get chats in a specific folder
+  getByFolder: protectedProcedure
+    .input(z.object({ folderId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const folderChats = await db
+        .select()
+        .from(chats)
+        .where(
+          and(
+            eq(chats.userId, ctx.user.id),
+            eq(chats.folderId, input.folderId)
+          )
+        )
+        .orderBy(desc(chats.updatedAt));
+
+      return folderChats;
+    }),
 
   // Get messages for a chat
   getMessages: protectedProcedure
@@ -397,6 +460,42 @@ export const chatRouter = router({
         .update(chats)
         .set({
           folderId: input.folderId || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(chats.id, input.chatId))
+        .execute();
+
+      return { success: true };
+    }),
+
+  moveToProject: protectedProcedure
+    .input(
+      z.object({
+        chatId: z.number(),
+        projectId: z.number().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [chat] = await db
+        .select()
+        .from(chats)
+        .where(eq(chats.id, input.chatId))
+        .limit(1);
+
+      if (!chat || chat.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Chat not found or access denied",
+        });
+      }
+
+      await db
+        .update(chats)
+        .set({
+          projectId: input.projectId || null,
           updatedAt: new Date(),
         })
         .where(eq(chats.id, input.chatId))

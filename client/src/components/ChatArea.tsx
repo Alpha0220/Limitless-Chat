@@ -78,7 +78,19 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
     }
   }, [messagesData]);
 
+  // Clear messages and input when starting a new chat
+  useEffect(() => {
+    if (chatId === null) {
+      setLocalMessages([]);
+      setInput("");
+      setStreamingContent("");
+    }
+  }, [chatId]);
+
   const messages = localMessages;
+
+  // Show suggested prompts when no chatId (new chat) or when no messages
+  const showSuggestedPrompts = chatId === null || (messages.length === 0 && !streamingContent);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -236,10 +248,9 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
                 setLocalMessages((prev) => [...prev, assistantMessage]);
                 setStreamingContent("");
 
-                // Invalidate queries
-                if (newChatId !== null) {
-                  utils.chat.getMessages.invalidate({ chatId: newChatId });
-                }
+                // Invalidate queries to refresh chat list and credits
+                // Note: Don't invalidate getMessages as it causes a race condition
+                // The optimistic update above is sufficient
                 utils.chat.list.invalidate();
                 utils.credits.getBalance.invalidate();
 
@@ -293,7 +304,27 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
     <div className="flex-1 flex flex-col h-full">
       {/* Messages Area */}
       <ScrollArea className="flex-1 px-4 py-6 max-h-[calc(100vh-130px)]" ref={scrollRef}>
-        {messages.length === 0 && !streamingContent && (
+        {/* Messages */}
+        {messages.map((msg) => (
+          <div key={msg.id} className={cn("flex mb-4", msg.role === "user" ? "justify-end" : "justify-start")}>
+            <div
+              className={cn(
+                "max-w-[80%] md:max-w-[70%] rounded-lg px-4 py-3 border",
+                msg.role === "user"
+                  ? "bg-primary text-primary-foreground rounded-br-none"
+                  : "bg-muted text-foreground rounded-bl-none border-border"
+              )}
+            >
+              {msg.role === "assistant" ? (
+                <Streamdown>{msg.content}</Streamdown>
+              ) : (
+                <p className="whitespace-pre-wrap">{msg.content}</p>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {showSuggestedPrompts && (
           <div className="flex flex-col items-center justify-center h-full max-w-3xl mx-auto">
             {/* Model Icon */}
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
@@ -324,17 +355,6 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
             </div>
           </div>
         )}
-
-        {/* TODO: Mock messages for testing */}
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-start">
-            <div className="max-w-[80%] md:max-w-[70%] rounded-lg px-4 py-3 bg-muted text-foreground rounded-bl-none border border-border">
-              {Array.from({ length: 20 }).map((_, index) => (
-                <Streamdown key={index}>Hello, how can I help you today? This is a mock message for testing.</Streamdown>
-              ))}
-            </div>
-          </div>
-        </div>
 
         {/* Streaming Content */}
         {streamingContent && (

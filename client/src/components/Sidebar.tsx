@@ -2,6 +2,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -24,6 +30,8 @@ import {
   Coins,
   Image,
   LogOut,
+  Trash2,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
@@ -34,6 +42,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { FolderDialog } from "@/components/FolderDialog";
 import { ChatContextMenu } from "@/components/ChatContextMenu";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -54,24 +63,56 @@ export function Sidebar({
 }: SidebarProps) {
   const [, setLocation] = useLocation();
   const [folderDialogOpen, setFolderDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<{ type: "folder" | "project"; id: number } | null>(null);
   
   // Fetch user info
   const { user, logout } = useAuth();
   
-  // Fetch chats from backend
-  const { data: chatsData } = trpc.chat.list.useQuery();
+  // Fetch projects
+  const { data: projectsData } = trpc.projects.list.useQuery();
   
   // Fetch folders
   const { data: foldersData } = trpc.folders.list.useQuery();
   
-  // Filter chats by selected project
-  const chats = (chatsData || []).filter(chat => {
-    if (selectedProjectId === null) return true; // Show all chats
-    return chat.projectId === selectedProjectId; // Show only project chats
-  });
+  // Fetch recent chats (without project or folder)
+  const { data: recentChatsData } = trpc.chat.getRecent.useQuery();
   
   // Fetch credit balance
   const { data: balance } = trpc.credits.getBalance.useQuery();
+
+  // Get chats for a specific project
+  const getProjectChats = (projectId: number) => {
+    const { data } = trpc.chat.getByProject.useQuery({ projectId });
+    return data || [];
+  };
+
+  // Get chats for a specific folder
+  const getFolderChats = (folderId: number) => {
+    const { data } = trpc.chat.getByFolder.useQuery({ folderId });
+    return data || [];
+  };
+
+  // Delete folder mutation
+  const deleteFolder = trpc.folders.deleteWithOptions.useMutation({
+    onSuccess: () => {
+      toast.success("Folder deleted successfully");
+      setDeleteDialogOpen(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete folder");
+    },
+  });
+
+  // Delete project mutation
+  const deleteProject = trpc.projects.deleteWithOptions.useMutation({
+    onSuccess: () => {
+      toast.success("Project deleted successfully");
+      setDeleteDialogOpen(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete project");
+    },
+  });
 
   const handleNewChat = () => {
     onSelectChat(null);
@@ -81,6 +122,22 @@ export function Sidebar({
   const handleSignout = async () => {
     await logout();
     setLocation("/");
+  };
+
+  const handleDeleteFolderOrProject = (action: "delete" | "move") => {
+    if (!deleteDialogOpen) return;
+
+    if (deleteDialogOpen.type === "folder") {
+      deleteFolder.mutate({
+        folderId: deleteDialogOpen.id,
+        action,
+      });
+    } else {
+      deleteProject.mutate({
+        projectId: deleteDialogOpen.id,
+        action,
+      });
+    }
   };
 
   return (
@@ -131,11 +188,9 @@ export function Sidebar({
           {/* Search Bar */}
           {!isCollapsed && (
             <div className="px-3 py-2">
-              <SearchBar className="w-full" />
+              <SearchBar className="w-full" onSelectChat={onSelectChat} />
             </div>
           )}
-
-
 
           {/* Templates */}
           <Button
@@ -162,8 +217,6 @@ export function Sidebar({
             <Image className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span className="ml-3 truncate">Media Creation</span>}
           </Button>
-
-
         </div>
 
         {!isCollapsed && (
@@ -172,85 +225,208 @@ export function Sidebar({
               <Separator className="bg-sidebar-border" />
             </div>
 
-            {/* Projects Section */}
-            <div className="px-3 pb-4 overflow-hidden">
-              <ProjectsSection
-                selectedProjectId={selectedProjectId}
-                onSelectProject={onSelectProject}
-              />
-            </div>
-
-            <div className="px-0 pb-4">
-              <Separator className="bg-sidebar-border" />
-            </div>
-
-            {/* Folders Section */}
-            <div className="px-0 pb-4 space-y-2 overflow-hidden w-full">
-              <div className="px-3 flex items-center justify-between">
-                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Folders
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setFolderDialogOpen(true)}
-                  className="h-6 w-6 p-0 text-muted-foreground hover:text-sidebar-foreground"
-                  title="Create folder"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="space-y-1 w-full">
-                {foldersData && foldersData.length > 0 ? (
-                  foldersData.map((folder) => (
-                    <Button
-                      key={folder.id}
-                      variant="ghost"
-                      className="w-full justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate px-3"
-                      title={folder.name}
-                    >
-                      <Folder className="h-4 w-4 flex-shrink-0" />
-                      <span className="ml-3 truncate">{folder.name}</span>
-                    </Button>
-                  ))
-                ) : (
-                  <p className="px-3 text-xs text-muted-foreground">No folders yet</p>
-                )}
-              </div>
-            </div>
-
-            <div className="px-0 pb-4">
-              <Separator className="bg-sidebar-border" />
-            </div>
-
-            {/* Recent Chats */}
-            <div className="px-0 pb-4 space-y-2 overflow-hidden w-full">
-              <h2 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Recent Chats
-              </h2>
-              <div className="space-y-1 w-full">
-                {chats.map((chat) => (
-                  <ChatContextMenu
-                    key={chat.id}
-                    chatId={chat.id}
-                    onDelete={() => onSelectChat(null)}
+            {/* Accordion for collapsible sections */}
+            <Accordion type="multiple" defaultValue={["projects", "folders", "recent-chats"]} className="w-full px-0">
+              {/* Projects Section */}
+              <AccordionItem value="projects" className="border-none px-3">
+                <AccordionTrigger className="py-2 hover:bg-sidebar-accent rounded-md text-xs font-semibold text-muted-foreground uppercase tracking-wider px-0 flex justify-between items-center group">
+                  <span>Projects</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLocation("/");
+                    }}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-sidebar-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Create project"
                   >
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate px-3",
-                        selectedChatId === chat.id && "bg-sidebar-accent"
-                      )}
-                      onClick={() => onSelectChat(chat.id)}
-                      title={chat.title || "New Chat"}
-                    >
-                      <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                      <span className="ml-3 truncate">{chat.title || "New Chat"}</span>
-                    </Button>
-                  </ChatContextMenu>
-                ))}
-              </div>
-            </div>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 space-y-2 w-full px-0">
+                  {projectsData && projectsData.length > 0 ? (
+                    projectsData.map((project) => {
+                      const projectChats = getProjectChats(project.id);
+                      return (
+                        <div key={project.id} className="space-y-1">
+                          <div className="flex items-center justify-between group px-3">
+                            <Button
+                              variant="ghost"
+                              className="flex-1 justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate"
+                              title={project.name}
+                              onClick={() => onSelectProject(project.id)}
+                            >
+                              <Folder className="h-4 w-4 flex-shrink-0" />
+                              <span className="ml-3 truncate">{project.name}</span>
+                              <span className="ml-2 text-xs text-muted-foreground flex-shrink-0">({projectChats.length})</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteDialogOpen({ type: "project", id: project.id });
+                              }}
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Delete project"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {/* Project chats */}
+                          {projectChats.length > 0 && (
+                            <div className="ml-4 space-y-1">
+                              {projectChats.map((chat) => (
+                                <ChatContextMenu
+                                  key={chat.id}
+                                  chatId={chat.id}
+                                  onDelete={() => onSelectChat(null)}
+                                >
+                                  <div className="group relative flex items-center w-full">
+                                    <Button
+                                      variant="ghost"
+                                      className={cn(
+                                        "flex-1 justify-start text-left text-xs text-muted-foreground hover:bg-sidebar-accent truncate px-2",
+                                        selectedChatId === chat.id && "bg-sidebar-accent text-sidebar-foreground"
+                                      )}
+                                      onClick={() => onSelectChat(chat.id)}
+                                      title={chat.title || "New Chat"}
+                                    >
+                                      <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                                      <span className="ml-2 truncate">{chat.title || "New Chat"}</span>
+                                    </Button>
+                                  </div>
+                                </ChatContextMenu>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="px-3 text-xs text-muted-foreground">No projects yet</p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Folders Section */}
+              <AccordionItem value="folders" className="border-none px-3">
+                <AccordionTrigger className="py-2 hover:bg-sidebar-accent rounded-md text-xs font-semibold text-muted-foreground uppercase tracking-wider px-0 flex justify-between items-center group">
+                  <span>Folders</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFolderDialogOpen(true);
+                    }}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-sidebar-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Create folder"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 space-y-2 w-full px-0">
+                  {foldersData && foldersData.length > 0 ? (
+                    foldersData.map((folder) => {
+                      const folderChats = getFolderChats(folder.id);
+                      return (
+                        <div key={folder.id} className="space-y-1">
+                          <div className="flex items-center justify-between group px-3">
+                            <Button
+                              variant="ghost"
+                              className="flex-1 justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate"
+                              title={folder.name}
+                            >
+                              <Folder className="h-4 w-4 flex-shrink-0" />
+                              <span className="ml-3 truncate">{folder.name}</span>
+                              <span className="ml-2 text-xs text-muted-foreground flex-shrink-0">({folderChats.length})</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteDialogOpen({ type: "folder", id: folder.id });
+                              }}
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Delete folder"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {/* Folder chats */}
+                          {folderChats.length > 0 && (
+                            <div className="ml-4 space-y-1">
+                              {folderChats.map((chat) => (
+                                <ChatContextMenu
+                                  key={chat.id}
+                                  chatId={chat.id}
+                                  onDelete={() => onSelectChat(null)}
+                                >
+                                  <div className="group relative flex items-center w-full">
+                                    <Button
+                                      variant="ghost"
+                                      className={cn(
+                                        "flex-1 justify-start text-left text-xs text-muted-foreground hover:bg-sidebar-accent truncate px-2",
+                                        selectedChatId === chat.id && "bg-sidebar-accent text-sidebar-foreground"
+                                      )}
+                                      onClick={() => onSelectChat(chat.id)}
+                                      title={chat.title || "New Chat"}
+                                    >
+                                      <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                                      <span className="ml-2 truncate">{chat.title || "New Chat"}</span>
+                                    </Button>
+                                  </div>
+                                </ChatContextMenu>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="px-3 text-xs text-muted-foreground">No folders yet</p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Recent Chats */}
+              <AccordionItem value="recent-chats" className="border-none px-3">
+                <AccordionTrigger className="py-2 hover:bg-sidebar-accent rounded-md text-xs font-semibold text-muted-foreground uppercase tracking-wider px-0">
+                  Recent Chats
+                </AccordionTrigger>
+                <AccordionContent className="pb-4 space-y-1 w-full px-0">
+                  {recentChatsData && recentChatsData.length > 0 ? (
+                    recentChatsData.map((chat) => (
+                      <ChatContextMenu
+                        key={chat.id}
+                        chatId={chat.id}
+                        onDelete={() => onSelectChat(null)}
+                      >
+                        <div className="group relative flex items-center w-full">
+                          <Button
+                            variant="ghost"
+                            className={cn(
+                              "flex-1 justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate px-3",
+                              selectedChatId === chat.id && "bg-sidebar-accent"
+                            )}
+                            onClick={() => onSelectChat(chat.id)}
+                            title={chat.title || "New Chat"}
+                          >
+                            <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                            <span className="ml-3 truncate">{chat.title || "New Chat"}</span>
+                          </Button>
+                        </div>
+                      </ChatContextMenu>
+                    ))
+                  ) : (
+                    <p className="px-3 text-xs text-muted-foreground">No recent chats</p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </>
         )}
       </ScrollArea>
@@ -340,6 +516,37 @@ export function Sidebar({
         onOpenChange={setFolderDialogOpen}
         mode="create"
       />
+
+      {/* Delete Folder/Project Dialog */}
+      <AlertDialog open={!!deleteDialogOpen} onOpenChange={(open) => !open && setDeleteDialogOpen(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {deleteDialogOpen?.type === "folder" ? "Folder" : "Project"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              What would you like to do with the chats inside?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => handleDeleteFolderOrProject("move")}
+              disabled={deleteFolder.isPending || deleteProject.isPending}
+            >
+              Move to Recent
+            </Button>
+            <AlertDialogAction
+              onClick={() => handleDeleteFolderOrProject("delete")}
+              disabled={deleteFolder.isPending || deleteProject.isPending}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete All
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

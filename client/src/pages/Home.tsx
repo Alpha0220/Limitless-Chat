@@ -7,14 +7,25 @@ import { Menu, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useLocation } from "wouter";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const [location] = useLocation();
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [selectedModel, setSelectedModel] = useState("google/gemini-2.0-flash-001");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Start collapsed on mobile
+
+  // Read chatId from URL parameter (from search results)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const chatIdParam = params.get('chatId');
+    if (chatIdParam) {
+      setSelectedChatId(parseInt(chatIdParam, 10));
+    }
+  }, [location]);
 
   // Auto-collapse sidebar on mobile
   useEffect(() => {

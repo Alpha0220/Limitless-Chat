@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { projects } from "../../drizzle/schema";
+import { projects, chats, messages } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 
 export const projectsRouter = router({
   // List all projects for the current user
@@ -84,6 +85,64 @@ export const projectsRouter = router({
       await db
         .delete(projects)
         .where(and(eq(projects.id, input.id), eq(projects.userId, ctx.user.id)));
+
+      return { success: true };
+    }),
+
+  // Delete a project with options for chats inside
+  deleteWithOptions: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.number(),
+        action: z.enum(["delete", "move"]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(and(eq(projects.id, input.projectId), eq(projects.userId, ctx.user.id)))
+        .limit(1);
+
+      if (!project) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Project not found or access denied",
+        });
+      }
+
+      if (input.action === "delete") {
+        const projectChats = await db
+          .select()
+          .from(chats)
+          .where(eq(chats.projectId, input.projectId));
+
+        for (const chat of projectChats) {
+          await db
+            .delete(messages)
+            .where(eq(messages.chatId, chat.id))
+            .execute();
+        }
+
+        await db
+          .delete(chats)
+          .where(eq(chats.projectId, input.projectId))
+          .execute();
+      } else {
+        await db
+          .update(chats)
+          .set({ projectId: null })
+          .where(eq(chats.projectId, input.projectId))
+          .execute();
+      }
+
+      await db
+        .delete(projects)
+        .where(eq(projects.id, input.projectId))
+        .execute();
 
       return { success: true };
     }),

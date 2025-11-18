@@ -335,12 +335,31 @@
 - [x] Fix ProjectsSection internal layout to fit sidebar width (removed px-2, added w-full)
 - [x] Fix Recent Chats section internal layout to fit sidebar width (changed px-3 to px-0 on container, added px-3 to buttons)
 
-
 ## New Features - Feature Branch (feature/core-functionality)
-- [ ] User authentication and session management
-- [ ] Create new chat functionality
-- [ ] Save and load chat history
-- [ ] Search functionality for chats and notes
-- [ ] Folder management (create, rename, delete)
-- [ ] Chat organization (move to folder, delete)
+- [x] User authentication and session management
+- [x] Create new chat functionality
+- [x] Save and load chat history
+- [x] Search functionality for chats and notes
+- [x] Folder management (create, rename, delete)
+- [x] Chat organization (move to folder, delete)
 - [ ] Settings page for API keys
+
+## Chat Organization & Deletion Features
+- [x] Update backend queries to filter chats by project/folder
+- [x] Add delete procedures for folders and projects with move-or-delete logic
+- [x] Update Sidebar to display chats in correct project/folder locations
+- [x] Filter "Recent Chats" to only show chats without project/folder
+- [x] Add delete confirmation dialogs for folders and projects
+- [x] Test chat organization and deletion workflow
+
+## Bug Fixes
+- [x] Fix "New Chat" button not clearing old messages when switching from historical chat
+  - Added useEffect to clear localMessages, input, and streamingContent when chatId becomes null
+  - Updated showSuggestedPrompts logic to display suggested prompts for new chats
+- [x] Fix chat messages not displaying in ChatArea
+  - Added missing message rendering code to display user and assistant messages
+  - Fixed race condition where query invalidation was clearing messages before DB save
+  - Messages now persist correctly after sending
+- [x] Fix user messages not being saved to database
+  - Added error handling and logging to stream-chat endpoint
+  - Verified user messages are now properly persisted

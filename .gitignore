@@ -105,3 +105,6 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Manus database query cache (contains sensitive data and credentials)
+.manus/

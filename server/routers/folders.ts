@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { folders, chats } from "../../drizzle/schema";
+import { folders, chats, messages } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
@@ -148,6 +148,64 @@ export const foldersRouter = router({
         .execute();
 
       // Delete the folder
+      await db
+        .delete(folders)
+        .where(eq(folders.id, input.folderId))
+        .execute();
+
+      return { success: true };
+    }),
+
+  // Delete a folder with options for chats inside
+  deleteWithOptions: protectedProcedure
+    .input(
+      z.object({
+        folderId: z.number(),
+        action: z.enum(["delete", "move"]),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+
+      const [folder] = await db
+        .select()
+        .from(folders)
+        .where(and(eq(folders.id, input.folderId), eq(folders.userId, ctx.user.id)))
+        .limit(1);
+
+      if (!folder) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Folder not found or access denied",
+        });
+      }
+
+      if (input.action === "delete") {
+        const folderChats = await db
+          .select()
+          .from(chats)
+          .where(eq(chats.folderId, input.folderId));
+
+        for (const chat of folderChats) {
+          await db
+            .delete(messages)
+            .where(eq(messages.chatId, chat.id))
+            .execute();
+        }
+
+        await db
+          .delete(chats)
+          .where(eq(chats.folderId, input.folderId))
+          .execute();
+      } else {
+        await db
+          .update(chats)
+          .set({ folderId: null })
+          .where(eq(chats.folderId, input.folderId))
+          .execute();
+      }
+
       await db
         .delete(folders)
         .where(eq(folders.id, input.folderId))
