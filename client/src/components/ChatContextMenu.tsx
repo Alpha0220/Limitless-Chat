@@ -99,10 +99,14 @@ export function ChatContextMenu({
 
   const handleMoveToFolder = async (folderId: number) => {
     try {
+      // First clear project if it has one
+      await moveToProjectMutation.mutateAsync({ chatId, projectId: undefined });
+      // Then move to folder
       await moveToFolderMutation.mutateAsync({ chatId, folderId });
       toast.success("Chat moved to folder successfully");
       utils.chat.list.invalidate();
       utils.folders.list.invalidate();
+      utils.projects.list.invalidate();
       onMove?.();
     } catch (error) {
       toast.error(
@@ -113,10 +117,13 @@ export function ChatContextMenu({
 
   const handleMoveToRoot = async () => {
     try {
-      await moveToFolderMutation.mutateAsync({ chatId });
-      toast.success("Chat moved to root");
+      // Clear both project and folder
+      await moveToProjectMutation.mutateAsync({ chatId, projectId: undefined });
+      await moveToFolderMutation.mutateAsync({ chatId, folderId: undefined });
+      toast.success("Chat moved to recent chats");
       utils.chat.list.invalidate();
       utils.folders.list.invalidate();
+      utils.projects.list.invalidate();
       onMove?.();
     } catch (error) {
       toast.error(
@@ -127,10 +134,14 @@ export function ChatContextMenu({
 
   const handleMoveToProject = async (projectId: number) => {
     try {
+      // First clear folder if it has one
+      await moveToFolderMutation.mutateAsync({ chatId, folderId: undefined });
+      // Then move to project
       await moveToProjectMutation.mutateAsync({ chatId, projectId });
       toast.success("Chat moved to project successfully");
       utils.chat.list.invalidate();
       utils.projects.list.invalidate();
+      utils.folders.list.invalidate();
       onMove?.();
     } catch (error) {
       toast.error(

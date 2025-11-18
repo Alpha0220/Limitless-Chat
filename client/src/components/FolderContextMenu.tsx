@@ -40,10 +40,14 @@ export function FolderContextMenu({
   const [deleteAction, setDeleteAction] = useState<"delete" | "move">("move");
   const [newName, setNewName] = useState(folderName);
 
+  const utils = trpc.useUtils();
+
   const renameFolder = trpc.folders.rename.useMutation({
     onSuccess: () => {
       toast.success("Folder renamed successfully");
       setRenameDialogOpen(false);
+      utils.folders.list.invalidate();
+      utils.chat.list.invalidate();
       onRename?.();
     },
     onError: (error) => {
@@ -55,6 +59,8 @@ export function FolderContextMenu({
     onSuccess: () => {
       toast.success("Folder deleted successfully");
       setDeleteDialogOpen(false);
+      utils.folders.list.invalidate();
+      utils.chat.list.invalidate();
       onDelete?.();
     },
     onError: (error) => {

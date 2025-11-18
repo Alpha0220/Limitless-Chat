@@ -387,3 +387,9 @@
 - [x] Fix "No procedure found on path projects.rename" error (restarted dev server)
 - [x] Fix "No procedure found on path folders.rename" error (restarted dev server)
 - [x] Verify all rename mutations are properly exported in main router
+
+## Bug Fixes - Rename and Move Operations
+- [x] Fix rename project/folder not updating UI until refresh (added query invalidation)
+- [x] Fix chat move from project to recent chats not working (clear project first)
+- [x] Fix chat move from project to folder not working (clear project first)
+- [x] Ensure all move operations properly clear previous location (implemented in all move handlers)

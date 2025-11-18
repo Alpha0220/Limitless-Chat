@@ -40,10 +40,14 @@ export function ProjectContextMenu({
   const [deleteAction, setDeleteAction] = useState<"delete" | "move">("move");
   const [newName, setNewName] = useState(projectName);
 
+  const utils = trpc.useUtils();
+
   const renameProject = trpc.projects.rename.useMutation({
     onSuccess: () => {
       toast.success("Project renamed successfully");
       setRenameDialogOpen(false);
+      utils.projects.list.invalidate();
+      utils.chat.list.invalidate();
       onRename?.();
     },
     onError: (error) => {
@@ -55,6 +59,8 @@ export function ProjectContextMenu({
     onSuccess: () => {
       toast.success("Project deleted successfully");
       setDeleteDialogOpen(false);
+      utils.projects.list.invalidate();
+      utils.chat.list.invalidate();
       onDelete?.();
     },
     onError: (error) => {
