@@ -372,4 +372,5 @@
 ## Bug Fixes - Nested Button Error
 - [x] Fix "<button> cannot contain a nested <button>" error in Sidebar
 - [x] Refactor project/folder items to use div instead of nested buttons
-- [x] Ensure delete button is accessible without nesting
+- [x] Refactor accordion trigger buttons to use div for create actions
+- [x] Ensure all delete/create buttons are accessible without nesting

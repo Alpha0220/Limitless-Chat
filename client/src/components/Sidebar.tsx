@@ -242,18 +242,24 @@ export function Sidebar({
               <AccordionItem value="projects" className="border-none px-3">
                 <AccordionTrigger className="py-2 hover:bg-sidebar-accent rounded-md text-xs font-semibold text-muted-foreground uppercase tracking-wider px-0 flex justify-between items-center group">
                   <span>Projects</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <div
                     onClick={(e) => {
                       e.stopPropagation();
                       setLocation("/");
                     }}
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-sidebar-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-sidebar-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
                     title="Create project"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setLocation("/");
+                      }
+                    }}
                   >
                     <Plus className="h-4 w-4" />
-                  </Button>
+                  </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4 space-y-2 w-full px-0">
                   {projectsData && projectsData.length > 0 ? (
@@ -326,18 +332,24 @@ export function Sidebar({
               <AccordionItem value="folders" className="border-none px-3">
                 <AccordionTrigger className="py-2 hover:bg-sidebar-accent rounded-md text-xs font-semibold text-muted-foreground uppercase tracking-wider px-0 flex justify-between items-center group">
                   <span>Folders</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <div
                     onClick={(e) => {
                       e.stopPropagation();
                       setFolderDialogOpen(true);
                     }}
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-sidebar-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-sidebar-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
                     title="Create folder"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setFolderDialogOpen(true);
+                      }
+                    }}
                   >
                     <Plus className="h-4 w-4" />
-                  </Button>
+                  </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-4 space-y-2 w-full px-0">
                   {foldersData && foldersData.length > 0 ? (
