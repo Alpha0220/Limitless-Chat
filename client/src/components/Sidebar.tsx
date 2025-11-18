@@ -41,7 +41,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { SearchBar } from "@/components/SearchBar";
 import { FolderDialog } from "@/components/FolderDialog";
 import { ChatContextMenu } from "@/components/ChatContextMenu";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
 interface SidebarProps {
@@ -74,23 +74,34 @@ export function Sidebar({
   // Fetch folders
   const { data: foldersData } = trpc.folders.list.useQuery();
   
-  // Fetch recent chats (without project or folder)
-  const { data: recentChatsData } = trpc.chat.getRecent.useQuery();
+  // Fetch ALL chats (not just recent)
+  const { data: allChatsData } = trpc.chat.list.useQuery();
   
   // Fetch credit balance
   const { data: balance } = trpc.credits.getBalance.useQuery();
 
-  // Get chats for a specific project
-  const getProjectChats = (projectId: number) => {
-    const { data } = trpc.chat.getByProject.useQuery({ projectId });
-    return data || [];
-  };
+  // Organize chats by project/folder client-side using useMemo
+  const organizedChats = useMemo(() => {
+    if (!allChatsData) return { recent: [], byProject: {}, byFolder: {} };
 
-  // Get chats for a specific folder
-  const getFolderChats = (folderId: number) => {
-    const { data } = trpc.chat.getByFolder.useQuery({ folderId });
-    return data || [];
-  };
+    const recent: typeof allChatsData = [];
+    const byProject: Record<number, typeof allChatsData> = {};
+    const byFolder: Record<number, typeof allChatsData> = {};
+
+    for (const chat of allChatsData) {
+      if (chat.projectId) {
+        if (!byProject[chat.projectId]) byProject[chat.projectId] = [];
+        byProject[chat.projectId].push(chat);
+      } else if (chat.folderId) {
+        if (!byFolder[chat.folderId]) byFolder[chat.folderId] = [];
+        byFolder[chat.folderId].push(chat);
+      } else {
+        recent.push(chat);
+      }
+    }
+
+    return { recent, byProject, byFolder };
+  }, [allChatsData]);
 
   // Delete folder mutation
   const deleteFolder = trpc.folders.deleteWithOptions.useMutation({
@@ -247,7 +258,7 @@ export function Sidebar({
                 <AccordionContent className="pb-4 space-y-2 w-full px-0">
                   {projectsData && projectsData.length > 0 ? (
                     projectsData.map((project) => {
-                      const projectChats = getProjectChats(project.id);
+                      const projectChats = organizedChats.byProject[project.id] || [];
                       return (
                         <div key={project.id} className="space-y-1">
                           <div className="flex items-center justify-between group px-3">
@@ -330,7 +341,7 @@ export function Sidebar({
                 <AccordionContent className="pb-4 space-y-2 w-full px-0">
                   {foldersData && foldersData.length > 0 ? (
                     foldersData.map((folder) => {
-                      const folderChats = getFolderChats(folder.id);
+                      const folderChats = organizedChats.byFolder[folder.id] || [];
                       return (
                         <div key={folder.id} className="space-y-1">
                           <div className="flex items-center justify-between group px-3">
@@ -398,8 +409,8 @@ export function Sidebar({
                   Recent Chats
                 </AccordionTrigger>
                 <AccordionContent className="pb-4 space-y-1 w-full px-0">
-                  {recentChatsData && recentChatsData.length > 0 ? (
-                    recentChatsData.map((chat) => (
+                  {organizedChats.recent.length > 0 ? (
+                    organizedChats.recent.map((chat) => (
                       <ChatContextMenu
                         key={chat.id}
                         chatId={chat.id}

@@ -363,3 +363,8 @@
 - [x] Fix user messages not being saved to database
   - Added error handling and logging to stream-chat endpoint
   - Verified user messages are now properly persisted
+
+## Bug Fixes - Sidebar Hooks Violation
+- [x] Fix "Rendered more hooks than during previous render" error in Sidebar
+- [x] Refactor to fetch all chats once instead of per-project/folder
+- [x] Organize chats client-side to avoid conditional hook calls
