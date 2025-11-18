@@ -403,3 +403,9 @@
 - [x] Fix project not refreshing after create and move (added explicit invalidation)
 - [x] Ensure project queries invalidate properly after move (added after move completes)
 - [x] Debug why project sidebar doesn't update with moved chat (fixed query invalidation timing)
+
+## Bug Fixes - Project Move Not Triggered
+- [x] Debug why move operation isn't being called after project creation (projectId was 0/undefined)
+- [x] Verify handleMoveToProject is being invoked (fixed projectId return)
+- [x] Check if move mutations are completing successfully (now working)
+- [x] Ensure chat is actually being updated in database (fixed with $returningId())

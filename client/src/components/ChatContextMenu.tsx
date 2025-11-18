@@ -168,17 +168,26 @@ export function ChatContextMenu({
         name: newProjectName,
       });
       console.log("[DEBUG] Project created:", newProject);
+      console.log("[DEBUG] newProject?.projectId:", newProject?.projectId);
       
       // Move chat to the newly created project
       if (newProject?.projectId) {
         console.log("[DEBUG] Moving chat to project:", newProject.projectId);
-        await handleMoveToProject(newProject.projectId);
-        console.log("[DEBUG] Chat moved successfully");
+        try {
+          await handleMoveToProject(newProject.projectId);
+          console.log("[DEBUG] Chat moved successfully");
+        } catch (moveError) {
+          console.error("[DEBUG] Error during move:", moveError);
+          throw moveError;
+        }
         // Ensure queries are invalidated after move
+        console.log("[DEBUG] Invalidating queries...");
         await utils.chat.list.invalidate();
         await utils.projects.list.invalidate();
+        console.log("[DEBUG] Queries invalidated");
       } else {
         console.warn("[DEBUG] No projectId in response:", newProject);
+        throw new Error("No projectId returned from server");
       }
       
       toast.success("Project created and chat moved successfully");
@@ -203,17 +212,26 @@ export function ChatContextMenu({
         name: newFolderName,
       });
       console.log("[DEBUG] Folder created:", newFolder);
+      console.log("[DEBUG] newFolder?.folderId:", newFolder?.folderId);
       
       // Move chat to the newly created folder
       if (newFolder?.folderId) {
         console.log("[DEBUG] Moving chat to folder:", newFolder.folderId);
-        await handleMoveToFolder(newFolder.folderId);
-        console.log("[DEBUG] Chat moved successfully");
+        try {
+          await handleMoveToFolder(newFolder.folderId);
+          console.log("[DEBUG] Chat moved successfully");
+        } catch (moveError) {
+          console.error("[DEBUG] Error during move:", moveError);
+          throw moveError;
+        }
         // Ensure queries are invalidated after move
+        console.log("[DEBUG] Invalidating queries...");
         await utils.chat.list.invalidate();
         await utils.folders.list.invalidate();
+        console.log("[DEBUG] Queries invalidated");
       } else {
         console.warn("[DEBUG] No folderId in response:", newFolder);
+        throw new Error("No folderId returned from server");
       }
       
       toast.success("Folder created and chat moved successfully");
