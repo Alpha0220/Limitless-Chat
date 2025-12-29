@@ -9,6 +9,7 @@ import { foldersRouter } from "./routers/folders";
 import { templatesRouter } from "./routers/templates";
 import { imageGenerationRouter } from "./routers/imageGeneration";
 import { stripeRouter } from "./routers/stripe";
+import { settingsRouter } from "./routers/settings";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -32,6 +33,7 @@ export const appRouter = router({
   templates: templatesRouter,
   imageGeneration: imageGenerationRouter,
   stripe: stripeRouter,
+  settings: settingsRouter,
 });
 
 export type AppRouter = typeof appRouter;

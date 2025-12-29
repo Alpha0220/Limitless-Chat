@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, userSettings, UserSettings, InsertUserSettings } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -88,6 +88,82 @@ export async function getUserByOpenId(openId: string) {
   console.log("[DEBUG] getUserByOpenId result:", result);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Get user settings by user ID
+ */
+export async function getUserSettings(userId: number): Promise<UserSettings | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user settings: database not available");
+    return undefined;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(userSettings)
+      .where(eq(userSettings.userId, userId))
+      .limit(1)
+      .execute();
+
+    return result.length > 0 ? result[0] : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to get user settings:", error);
+    return undefined;
+  }
+}
+
+/**
+ * Upsert user settings (create or update)
+ */
+export async function upsertUserSettings(
+  userId: number,
+  settings: Partial<InsertUserSettings>
+): Promise<UserSettings | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot upsert user settings: database not available");
+    return undefined;
+  }
+
+  try {
+    const values: InsertUserSettings = {
+      userId,
+      ...settings,
+    };
+
+    const updateSet: Record<string, unknown> = {};
+
+    // Build update set from provided settings
+    if (settings.limitlessApiKey !== undefined) {
+      updateSet.limitlessApiKey = settings.limitlessApiKey;
+    }
+    if (settings.openaiApiKey !== undefined) {
+      updateSet.openaiApiKey = settings.openaiApiKey;
+    }
+    if (settings.anthropicApiKey !== undefined) {
+      updateSet.anthropicApiKey = settings.anthropicApiKey;
+    }
+    if (settings.selectedModel !== undefined) {
+      updateSet.selectedModel = settings.selectedModel;
+    }
+
+    await db
+      .insert(userSettings)
+      .values(values)
+      .onDuplicateKeyUpdate({
+        set: updateSet,
+      })
+      .execute();
+
+    // Return updated settings
+    return getUserSettings(userId);
+  } catch (error) {
+    console.error("[Database] Failed to upsert user settings:", error);
+    throw error;
+  }
 }
 
 // TODO: add feature queries here as your schema grows.

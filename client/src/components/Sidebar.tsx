@@ -230,6 +230,19 @@ export function Sidebar({
             <Image className="h-5 w-5 flex-shrink-0" />
             {!isCollapsed && <span className="ml-3 truncate">Media Creation</span>}
           </Button>
+
+          {/* Settings */}
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent truncate px-3",
+              isCollapsed && "justify-center px-2"
+            )}
+            onClick={() => setLocation("/settings")}
+          >
+            <Settings className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && <span className="ml-3 truncate">Settings</span>}
+          </Button>
         </div>
 
         {!isCollapsed && (
