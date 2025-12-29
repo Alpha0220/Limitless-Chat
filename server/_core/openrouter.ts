@@ -74,7 +74,8 @@ export async function callOpenRouter(
   messages: OpenRouterMessage[],
   stream: boolean = false
 ): Promise<OpenRouterResponse | ReadableStream> {
-  const openrouterModel = MODEL_MAP[model] || MODEL_MAP["gpt-4"];
+  // Use full model ID if available in map, otherwise pass through as-is for direct OpenRouter IDs
+  const openrouterModel = MODEL_MAP[model] || model || "openai/gpt-4-turbo";
   
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -107,7 +108,7 @@ export async function callOpenRouter(
  * Calculate credits needed for a chat completion
  */
 export function calculateCredits(model: string, tokenCount?: number): number {
-  const baseCredits = MODEL_CREDITS[model] || 10;
+  const baseCredits = MODEL_CREDITS[model] || MODEL_CREDITS["openai/gpt-4-turbo"] || 10;
   
   // If we have token count, we could adjust based on that
   // For now, just return base credits per message
