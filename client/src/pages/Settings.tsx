@@ -72,9 +72,12 @@ export default function Settings() {
   });
 
   // Update mutation
+  const utils = trpc.useUtils();
   const updateMutation = trpc.settings.updateSettings.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Settings saved successfully!");
+      // Invalidate settings query to refresh data
+      await utils.settings.getSettings.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to save settings");
@@ -211,7 +214,7 @@ export default function Settings() {
                 </label>
                 <Select
                   value={selectedModel}
-                  onValueChange={(value) => setValue("selectedModel", value)}
+                  onValueChange={(value) => setValue("selectedModel", value, { shouldDirty: true })}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a model" />
