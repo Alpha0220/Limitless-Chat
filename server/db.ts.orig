@@ -134,7 +134,6 @@ export async function upsertUserSettings(
   }
 
   try {
-    console.log("[Settings] upsertUserSettings - Saving:", { userId, model: settings.selectedModel });
     const values: InsertUserSettings = {
       userId,
       ...settings,
@@ -164,7 +163,6 @@ export async function upsertUserSettings(
       })
       .execute();
 
-    console.log("[Settings] upsertUserSettings - Saved, fetching updated");
     // Return updated settings
     return getUserSettings(userId);
   } catch (error) {

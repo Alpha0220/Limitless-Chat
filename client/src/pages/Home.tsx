@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -17,6 +18,16 @@ export default function Home() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [selectedModel, setSelectedModel] = useState("google/gemini-2.0-flash-001");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Start collapsed on mobile
+
+  // Fetch user settings to get saved model preference
+  const { data: userSettings } = trpc.settings.getSettings.useQuery();
+
+  // Load saved model preference from settings
+  useEffect(() => {
+    if (userSettings?.selectedModel) {
+      setSelectedModel(userSettings.selectedModel);
+    }
+  }, [userSettings]);
 
   // Read chatId from URL parameter (from search results)
   useEffect(() => {

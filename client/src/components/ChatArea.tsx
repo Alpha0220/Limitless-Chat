@@ -25,14 +25,15 @@ interface ChatAreaProps {
 const MODEL_CREDITS: Record<string, number> = {
   "openai/gpt-5": 15,
   "openai/gpt-5-pro": 25,
-  "gpt-4": 10,
+  "openai/gpt-4-turbo": 10,
+  "openai/gpt-4o": 8,
   "anthropic/claude-opus-4.1": 20,
-  "anthropic/claude-sonnet-4.5": 12,
-  "anthropic/claude-sonnet-4": 10,
-  "anthropic/claude-haiku-4.5": 6,
-  "anthropic/claude-3.7-sonnet": 8,
-  "perplexity/sonar-pro": 8,
-  "perplexity/sonar": 3,
+  "anthropic/claude-3.5-sonnet": 12,
+  "anthropic/claude-3.5-sonnet-20241022": 12,
+  "anthropic/claude-3-sonnet": 10,
+  "anthropic/claude-3-haiku": 6,
+  "perplexity/llama-3.1-sonar-small-128k-online": 3,
+  "perplexity/llama-3.1-sonar-large-128k-online": 8,
   "google/gemini-2.0-flash-001": 2,
 };
 

@@ -28,7 +28,7 @@
 - [x] Support markdown rendering in messages
 
 ## Limitless API Integration
-- [ ] Create API key management in settings
+- [x] Create API key management in settings
 - [ ] Implement Limitless API client for fetching lifelogs
 - [ ] Add date selection for daily summaries
 - [ ] Integrate context from Limitless data into chat
@@ -46,7 +46,7 @@
 - [x] Search functionality for chats and notes
 - [x] Folder management (create, rename, delete)
 - [x] Chat organization (move to folder, delete)
-- [ ] Settings page for API keys
+- [x] Settings page for API keys
 
 ## Polish & Testing
 - [ ] Test all features end-to-end
@@ -342,7 +342,7 @@
 - [x] Search functionality for chats and notes
 - [x] Folder management (create, rename, delete)
 - [x] Chat organization (move to folder, delete)
-- [ ] Settings page for API keys
+- [x] Settings page for API keys
 
 ## Chat Organization & Deletion Features
 - [x] Update backend queries to filter chats by project/folder
