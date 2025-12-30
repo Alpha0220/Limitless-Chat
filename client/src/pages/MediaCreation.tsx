@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,30 +14,47 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 
+const IMAGE_SIZES = [
+  { id: "landscape_16_9", name: "Landscape 16:9", description: "1920×1080" },
+  { id: "landscape_4_3", name: "Landscape 4:3", description: "1024×768" },
+  { id: "portrait_16_9", name: "Portrait 16:9", description: "1080×1920" },
+  { id: "portrait_4_3", name: "Portrait 4:3", description: "768×1024" },
+  { id: "square_hd", name: "Square HD", description: "1024×1024" },
+  { id: "square", name: "Square", description: "512×512" },
+] as const;
+
 export default function MediaCreation() {
   const [, setLocation] = useLocation();
   const [prompt, setPrompt] = useState("");
   const [selectedModel, setSelectedModel] = useState<string>("fal-ai:flux-schnell");
+  const [selectedSize, setSelectedSize] = useState<typeof IMAGE_SIZES[number]["id"]>("landscape_16_9");
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [generatedModel, setGeneratedModel] = useState<string | null>(null);
+  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
+  const [generatedSize, setGeneratedSize] = useState<string | null>(null);
 
   // Fetch available models
   const { data: availableModels = [] } = trpc.imageGeneration.getModels.useQuery();
 
   // Get current model config
   const currentModel = availableModels.find((m) => m.modelId === selectedModel);
-
-  // Check which models are actually available (have API keys configured)
-  const availableModelIds = new Set(availableModels.map((m) => m.modelId));
-  
-  // If selected model is not available, switch to first available model
-  const selectedModelIsAvailable = availableModelIds.has(selectedModel);
-  if (!selectedModelIsAvailable && availableModels.length > 0) {
-    const defaultModel = availableModels.find((m) => m.modelId.startsWith("fal-ai")) || availableModels[0];
-    if (defaultModel) setSelectedModel(defaultModel.modelId);
-  }
-
+  const currentSize = IMAGE_SIZES.find((s) => s.id === selectedSize);
   const modelCost = currentModel?.cost ?? 5;
+
+  // Fix infinite re-render: Use useEffect to handle default model selection
+  useEffect(() => {
+    if (availableModels.length === 0) return;
+    
+    const availableModelIds = new Set(availableModels.map((m) => m.modelId));
+    const selectedModelIsAvailable = availableModelIds.has(selectedModel);
+    
+    if (!selectedModelIsAvailable) {
+      const defaultModel = availableModels.find((m) => m.modelId.startsWith("fal-ai")) || availableModels[0];
+      if (defaultModel && defaultModel.modelId !== selectedModel) {
+        setSelectedModel(defaultModel.modelId);
+      }
+    }
+  }, [availableModels, selectedModel]);
 
   // Fetch credit balance
   const { data: balance } = trpc.credits.getBalance.useQuery();
@@ -47,6 +64,8 @@ export default function MediaCreation() {
     onSuccess: (data) => {
       setGeneratedImageUrl(data.imageUrl);
       setGeneratedModel(data.modelName);
+      setGeneratedPrompt(prompt);
+      setGeneratedSize(selectedSize);
       toast.success(`Image generated with ${data.modelName}! ${data.creditsUsed} credits used. ${data.creditsRemaining} credits remaining.`);
       setPrompt("");
     },
@@ -75,6 +94,7 @@ export default function MediaCreation() {
     generateMutation.mutate({
       prompt,
       modelId: selectedModel as any,
+      imageSize: selectedSize,
     });
   };
 
@@ -168,6 +188,24 @@ export default function MediaCreation() {
 
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
+                  Image Size
+                </label>
+                <Select value={selectedSize} onValueChange={(value) => setSelectedSize(value as any)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {IMAGE_SIZES.map((size) => (
+                      <SelectItem key={size.id} value={size.id}>
+                        {size.name} - {size.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
                   Prompt
                 </label>
                 <Textarea
@@ -180,7 +218,7 @@ export default function MediaCreation() {
 
               <Button
                 onClick={handleGenerate}
-                disabled={generateMutation.isPending || !prompt.trim()}
+                disabled={generateMutation.isPending || !prompt.trim() || (balance && balance.credits < modelCost)}
                 className="w-full"
                 size="lg"
               >
@@ -209,11 +247,16 @@ export default function MediaCreation() {
                     {generatedModel && (
                       <p className="text-sm text-muted-foreground">Model: {generatedModel}</p>
                     )}
+                    {generatedSize && (
+                      <p className="text-sm text-muted-foreground">
+                        Size: {IMAGE_SIZES.find((s) => s.id === generatedSize)?.name}
+                      </p>
+                    )}
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDownload(generatedImageUrl, prompt)}
+                    onClick={() => handleDownload(generatedImageUrl, generatedPrompt || "image")}
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download
@@ -243,6 +286,7 @@ export default function MediaCreation() {
                       onClick={() => {
                         setGeneratedImageUrl(image.imageUrl);
                         setGeneratedModel(image.model);
+                        setGeneratedPrompt(image.prompt);
                       }}
                     >
                       <img

@@ -10,6 +10,7 @@ import { getDb } from "../db";
 import { generatedImages, users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { ENV } from "../_core/env";
 
 // Model ID validation schema
 const ImageModelIdSchema = z.enum(
@@ -21,13 +22,27 @@ export const imageGenerationRouter = router({
    * Get available image generation models with costs
    */
   getModels: protectedProcedure.query(async () => {
-    return Object.entries(IMAGE_MODELS).map(([modelId, config]) => ({
-      modelId,
-      displayName: config.displayName,
-      provider: config.provider,
-      cost: config.cost,
-      description: config.description,
-    }));
+    return Object.entries(IMAGE_MODELS).map(([modelId, config]) => {
+      let isConfigured = true;
+      
+      // Check if required API key is configured
+      if (config.provider === "fal-ai") {
+        isConfigured = !!ENV.falAiApiKey;
+      } else if (config.provider === "openai") {
+        isConfigured = !!ENV.openaiApiKey;
+      } else if (config.provider === "google") {
+        isConfigured = !!ENV.googleGenaiApiKey;
+      }
+      
+      return {
+        modelId,
+        displayName: config.displayName,
+        provider: config.provider,
+        cost: config.cost,
+        description: config.description,
+        isConfigured,
+      };
+    });
   }),
 
   /**
@@ -38,6 +53,7 @@ export const imageGenerationRouter = router({
       z.object({
         prompt: z.string().min(1, "Prompt is required"),
         modelId: ImageModelIdSchema,
+        imageSize: z.string().optional().default("square"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -89,6 +105,7 @@ export const imageGenerationRouter = router({
         const result = await generateImage({
           prompt: input.prompt,
           modelId: input.modelId,
+          imageSize: input.imageSize,
         });
 
         // Deduct credits

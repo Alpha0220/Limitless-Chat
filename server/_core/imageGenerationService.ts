@@ -124,6 +124,9 @@ async function generateWithOpenAI(prompt: string): Promise<string> {
 }
 
 // Google Generative AI Adapter (Nano Banana - Gemini)
+// NOTE: Google Generative AI does not currently support image generation via generateContent API
+// For image generation, we would need to use Google's Imagen 3 API or Vertex AI
+// For now, this is a placeholder that returns a helpful error message
 async function generateWithGoogle(
   prompt: string,
   modelId: string
@@ -132,85 +135,16 @@ async function generateWithGoogle(
     throw new Error("GOOGLE_GENAI_API_KEY is not configured");
   }
 
-  // Map model IDs to Google Generative AI model names
-  const googleModelMap: Record<string, string> = {
-    "google:gemini-2.5-flash-image": "gemini-2.5-flash",
-    "google:gemini-3-pro-image": "gemini-3-pro",
-  };
-
-  const googleModel = googleModelMap[modelId];
-  if (!googleModel) {
-    throw new Error(`Unknown Google model: ${modelId}`);
-  }
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${googleModel}:generateContent?key=${ENV.googleGenaiApiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-        generationConfig: {
-          temperature: 1,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        },
-      }),
-    }
+  // Google Generative AI (generativelanguage.googleapis.com) does not support image generation
+  // Image generation would require:
+  // 1. Google Cloud Vertex AI (requires service account)
+  // 2. Or waiting for Google to add image generation to Generative AI API
+  
+  throw new Error(
+    "Google image generation is not yet available. " +
+    "Please use FAL AI (Flux) or OpenAI (DALL-E 3) for image generation. " +
+    "We're working on adding Google Imagen 3 support soon!"
   );
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(
-      `Google Generative AI request failed (${response.status} ${response.statusText})${detail ? `: ${detail}` : ""}`
-    );
-  }
-
-  const result = (await response.json()) as {
-    candidates: Array<{
-      content: {
-        parts: Array<{
-          text?: string;
-          inlineData?: {
-            mimeType: string;
-            data: string;
-          };
-        }>;
-      };
-    }>;
-  };
-
-  if (!result.candidates || result.candidates.length === 0) {
-    throw new Error("No content returned from Google Generative AI");
-  }
-
-  const parts = result.candidates[0].content.parts;
-  const imagePart = parts.find((p) => p.inlineData);
-
-  if (!imagePart || !imagePart.inlineData) {
-    throw new Error("No image data returned from Google Generative AI");
-  }
-
-  // Convert base64 to buffer and upload to S3
-  const buffer = Buffer.from(imagePart.inlineData.data, "base64");
-  const { url } = await storagePut(
-    `generated/${Date.now()}.png`,
-    buffer,
-    imagePart.inlineData.mimeType
-  );
-
-  return url;
 }
 
 // Main dispatcher function
