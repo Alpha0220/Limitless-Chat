@@ -5,6 +5,7 @@
 
 import { storagePut } from "server/storage";
 import { ENV } from "./env";
+import { generateImageWithFal } from "./falImageGeneration";
 
 // Model configuration with costs
 export const IMAGE_MODELS = {
@@ -61,6 +62,7 @@ export type GenerateImageResponse = {
 };
 
 // FAL AI Adapter
+
 async function generateWithFalAI(
   prompt: string,
   modelId: string
@@ -69,47 +71,17 @@ async function generateWithFalAI(
     throw new Error("FAL_AI_API_KEY is not configured");
   }
 
-  // Map model IDs to FAL AI model names
-  const falModelMap: Record<string, string> = {
-    "fal-ai:flux-schnell": "fal-ai/flux-schnell",
-    "fal-ai:flux-pro": "fal-ai/flux-pro",
-  };
-
-  const falModel = falModelMap[modelId];
-  if (!falModel) {
-    throw new Error(`Unknown FAL AI model: ${modelId}`);
-  }
-
-  const response = await fetch("https://queue.fal.run/fal-ai/flux/schnell", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Key ${ENV.falAiApiKey}`,
-    },
-    body: JSON.stringify({
+  try {
+    const result = await generateImageWithFal({
       prompt,
-      image_size: "landscape_4_3",
-      num_inference_steps: 4,
-      enable_safety_checker: true,
-    }),
-  });
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(
-      `FAL AI request failed (${response.status} ${response.statusText})${detail ? `: ${detail}` : ""}`
-    );
+      imageSize: "landscape_4_3",
+      numInferenceSteps: 4,
+    });
+    return result.url;
+  } catch (error) {
+    console.error("[ImageGeneration] FAL AI error:", error);
+    throw error;
   }
-
-  const result = (await response.json()) as {
-    images: Array<{ url: string }>;
-  };
-
-  if (!result.images || result.images.length === 0) {
-    throw new Error("No images returned from FAL AI");
-  }
-
-  return result.images[0].url;
 }
 
 // OpenAI Adapter (DALL-E 3)
