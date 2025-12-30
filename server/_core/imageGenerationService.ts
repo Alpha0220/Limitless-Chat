@@ -49,6 +49,7 @@ export type ImageModelId = keyof typeof IMAGE_MODELS;
 export type GenerateImageOptions = {
   prompt: string;
   modelId: ImageModelId;
+  imageSize?: string;
   originalImages?: Array<{
     url?: string;
     b64Json?: string;
