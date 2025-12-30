@@ -26,6 +26,17 @@ export default function MediaCreation() {
 
   // Get current model config
   const currentModel = availableModels.find((m) => m.modelId === selectedModel);
+
+  // Check which models are actually available (have API keys configured)
+  const availableModelIds = new Set(availableModels.map((m) => m.modelId));
+  
+  // If selected model is not available, switch to first available model
+  const selectedModelIsAvailable = availableModelIds.has(selectedModel);
+  if (!selectedModelIsAvailable && availableModels.length > 0) {
+    const defaultModel = availableModels.find((m) => m.modelId.startsWith("fal-ai")) || availableModels[0];
+    if (defaultModel) setSelectedModel(defaultModel.modelId);
+  }
+
   const modelCost = currentModel?.cost ?? 5;
 
   // Fetch credit balance
