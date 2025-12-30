@@ -409,3 +409,44 @@
 - [x] Verify handleMoveToProject is being invoked (fixed projectId return)
 - [x] Check if move mutations are completing successfully (now working)
 - [x] Ensure chat is actually being updated in database (fixed with $returningId())
+
+
+## Multi-Model Image Generation (In Progress)
+### Backend Service Layer
+- [ ] Design multi-model service layer architecture
+- [ ] Create image generation service adapters (FAL, OpenAI, Google)
+- [ ] Implement FalAdapter for Flux models (Schnell, Pro)
+- [ ] Implement OpenAIAdapter for DALL-E 3
+- [ ] Implement GoogleAdapter for Nano Banana (Gemini 2.5 Flash, Gemini 3 Pro)
+- [ ] Create dispatcher function for provider selection by modelId
+- [ ] Add model cost configuration (Flux Schnell: 5, Flux Pro: 10, DALL-E 3: 10, Nano Banana: 6-12)
+
+### Backend Router Updates
+- [ ] Update imageGeneration.generate procedure input schema with model field
+- [ ] Implement dynamic credit deduction based on selected model
+- [ ] Store model name in generatedImages table
+- [ ] Add model cost lookup in credit calculation
+- [ ] Test credit deduction for each model
+
+### Frontend UI Components
+- [ ] Create ModelSelector component with provider grouping
+- [ ] Add model selection UI (Card or Select component)
+- [ ] Group models by provider (FAL AI, OpenAI, Google)
+- [ ] Display model names and credit costs
+- [ ] Show "Nano Banana" branding for Google models
+- [ ] Update Generate button to display selected model cost
+
+### Frontend Integration
+- [ ] Integrate ModelSelector into MediaCreation page
+- [ ] Pass selected model to backend generate endpoint
+- [ ] Update credit display based on selected model
+- [ ] Handle model selection state management
+- [ ] Test model selection and generation flow
+
+### Testing & Validation
+- [ ] Test image generation with each model
+- [ ] Verify credit deduction accuracy per model
+- [ ] Test provider-grouped UI responsiveness
+- [ ] Ensure mobile compatibility
+- [ ] Test error handling for each provider
+- [ ] Create checkpoint

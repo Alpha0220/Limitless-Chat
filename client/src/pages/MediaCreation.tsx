@@ -14,24 +14,19 @@ import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 
-const IMAGE_SIZES = [
-  { id: "landscape_16_9", name: "Landscape 16:9", description: "1920×1080" },
-  { id: "landscape_4_3", name: "Landscape 4:3", description: "1024×768" },
-  { id: "portrait_16_9", name: "Portrait 16:9", description: "1080×1920" },
-  { id: "portrait_4_3", name: "Portrait 4:3", description: "768×1024" },
-  { id: "square_hd", name: "Square HD", description: "1024×1024" },
-  { id: "square", name: "Square", description: "512×512" },
-] as const;
-
-const IMAGE_GENERATION_COST = 5; // credits per image
-
 export default function MediaCreation() {
   const [, setLocation] = useLocation();
   const [prompt, setPrompt] = useState("");
-  const [selectedSize, setSelectedSize] = useState<typeof IMAGE_SIZES[number]["id"]>("landscape_16_9");
+  const [selectedModel, setSelectedModel] = useState<string>("fal-ai:flux-schnell");
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [generatedModel, setGeneratedModel] = useState<string | null>(null);
 
-  const currentSize = IMAGE_SIZES.find((s) => s.id === selectedSize);
+  // Fetch available models
+  const { data: availableModels = [] } = trpc.imageGeneration.getModels.useQuery();
+
+  // Get current model config
+  const currentModel = availableModels.find((m) => m.modelId === selectedModel);
+  const modelCost = currentModel?.cost ?? 5;
 
   // Fetch credit balance
   const { data: balance } = trpc.credits.getBalance.useQuery();
@@ -40,7 +35,8 @@ export default function MediaCreation() {
   const generateMutation = trpc.imageGeneration.generate.useMutation({
     onSuccess: (data) => {
       setGeneratedImageUrl(data.imageUrl);
-      toast.success(`Image generated! ${data.creditsUsed} credits used. ${data.creditsRemaining} credits remaining.`);
+      setGeneratedModel(data.modelName);
+      toast.success(`Image generated with ${data.modelName}! ${data.creditsUsed} credits used. ${data.creditsRemaining} credits remaining.`);
       setPrompt("");
     },
     onError: (error) => {
@@ -60,14 +56,14 @@ export default function MediaCreation() {
       return;
     }
 
-    if (balance && balance.credits < IMAGE_GENERATION_COST) {
-      toast.error(`Insufficient credits. You need ${IMAGE_GENERATION_COST} credits to generate an image.`);
+    if (balance && balance.credits < modelCost) {
+      toast.error(`Insufficient credits. You need ${modelCost} credits to generate an image with this model. You have ${balance.credits} credits.`);
       return;
     }
 
     generateMutation.mutate({
       prompt,
-      imageSize: selectedSize,
+      modelId: selectedModel as any,
     });
   };
 
@@ -79,6 +75,15 @@ export default function MediaCreation() {
     link.click();
     toast.success("Image download started!");
   };
+
+  // Group models by provider
+  const modelsByProvider: Record<string, typeof availableModels> = {};
+  availableModels.forEach((model) => {
+    if (!modelsByProvider[model.provider]) {
+      modelsByProvider[model.provider] = [];
+    }
+    modelsByProvider[model.provider].push(model);
+  });
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
@@ -99,109 +104,116 @@ export default function MediaCreation() {
                 <Sparkles className="h-6 w-6 text-primary" />
                 Media Creation
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Generate images using FAL AI Flux model
-              </p>
+              <p className="text-sm text-muted-foreground">Generate images with AI</p>
             </div>
           </div>
-          {balance && (
-            <div className="text-sm text-muted-foreground">
-              Credits: <span className="font-semibold text-foreground">{balance.credits}</span>
+          <div className="flex items-center gap-2">
+            <div className="text-right">
+              <div className="text-2xl font-bold text-primary">{balance?.credits ?? 0}</div>
+              <div className="text-xs text-muted-foreground">Credits</div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4">
         <div className="max-w-5xl mx-auto space-y-6">
-          {/* Generation Form */}
-          <Card className="bg-card border-border shadow-sm">
+          {/* Generation Section */}
+          <Card className="bg-card border-border">
             <CardContent className="p-6 space-y-4">
-              {/* Image Size Selector */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
-                  Image Size
+                  Select Model
                 </label>
-                <Select value={selectedSize} onValueChange={(value: any) => setSelectedSize(value)}>
-                  <SelectTrigger className="bg-input border-border text-foreground">
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border">
-                    {IMAGE_SIZES.map((size) => (
-                      <SelectItem
-                        key={size.id}
-                        value={size.id}
-                        className="text-popover-foreground hover:bg-accent focus:bg-accent"
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span>{size.name}</span>
-                          <span className="text-xs text-muted-foreground ml-4">
-                            {size.description}
-                          </span>
+                  <SelectContent>
+                    {Object.entries(modelsByProvider).map(([provider, models]) => (
+                      <div key={provider}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                          {provider === "fal-ai" ? "FAL AI" : provider === "openai" ? "OpenAI" : "Google"}
                         </div>
-                      </SelectItem>
+                        {models.map((model) => (
+                          <SelectItem key={model.modelId} value={model.modelId}>
+                            <span className="flex items-center gap-2">
+                              {model.displayName}
+                              <span className="text-xs text-muted-foreground">({model.cost} credits)</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </div>
                     ))}
                   </SelectContent>
                 </Select>
+                {currentModel && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {currentModel.description} • {currentModel.cost} credits per image
+                  </p>
+                )}
               </div>
 
-              {/* Prompt Input */}
               <div>
                 <label className="text-sm font-medium text-foreground mb-2 block">
-                  Describe your image
+                  Prompt
                 </label>
                 <Textarea
+                  placeholder="Describe the image you want to generate..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="A serene landscape with mountains at sunset, photorealistic, 4k..."
-                  className="min-h-[120px] bg-input border-border text-foreground placeholder:text-muted-foreground resize-none"
-                  disabled={generateMutation.isPending}
+                  className="min-h-24 resize-none"
                 />
               </div>
 
-              {/* Generate Button */}
               <Button
                 onClick={handleGenerate}
                 disabled={generateMutation.isPending || !prompt.trim()}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="w-full"
                 size="lg"
               >
                 {generateMutation.isPending ? (
                   <>
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Generating...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-5 w-5 mr-2" />
-                    Generate Image ({IMAGE_GENERATION_COST} credits)
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Generate Image ({modelCost} credits)
                   </>
                 )}
               </Button>
             </CardContent>
           </Card>
 
-          {/* Currently Generated Image */}
+          {/* Generated Image */}
           {generatedImageUrl && (
-            <Card className="bg-card border-border overflow-hidden shadow-sm">
-              <CardContent className="p-0">
-                <div className="relative">
+            <Card className="bg-card border-border">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-foreground">Generated Image</h3>
+                    {generatedModel && (
+                      <p className="text-sm text-muted-foreground">Model: {generatedModel}</p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownload(generatedImageUrl, prompt)}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+                <div className="rounded-lg overflow-hidden bg-muted">
                   <img
                     src={generatedImageUrl}
                     alt="Generated"
                     className="w-full h-auto"
                   />
-                  <div className="absolute top-4 right-4">
-                    <Button
-                      onClick={() => handleDownload(generatedImageUrl, "generated-image")}
-                      size="sm"
-                      className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -209,59 +221,32 @@ export default function MediaCreation() {
 
           {/* Image History */}
           {imageHistory && imageHistory.length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold text-foreground mb-4">
-                Recent Images
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {imageHistory.map((image) => (
-                  <Card
-                    key={image.id}
-                    className="bg-card border-border overflow-hidden group shadow-sm"
-                  >
-                    <div className="relative aspect-square">
+            <Card className="bg-card border-border">
+              <CardContent className="p-6 space-y-4">
+                <h3 className="font-semibold text-foreground">Recent Generations</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {imageHistory.map((image) => (
+                    <div
+                      key={image.id}
+                      className="group relative rounded-lg overflow-hidden bg-muted cursor-pointer"
+                      onClick={() => {
+                        setGeneratedImageUrl(image.imageUrl);
+                        setGeneratedModel(image.model);
+                      }}
+                    >
                       <img
                         src={image.imageUrl}
                         alt={image.prompt}
-                        className="w-full h-full object-cover"
+                        className="w-full h-32 object-cover group-hover:opacity-75 transition-opacity"
                       />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button
-                          onClick={() => handleDownload(image.imageUrl, image.prompt)}
-                          size="sm"
-                          className="bg-primary text-primary-foreground hover:bg-primary/90"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <ImageIcon className="h-6 w-6 text-white" />
                       </div>
                     </div>
-                    <CardContent className="p-4">
-                      <p className="text-sm text-foreground line-clamp-2 mb-2">
-                        {image.prompt}
-                      </p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{image.imageSize}</span>
-                        <span>{new Date(image.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!generatedImageUrl && (!imageHistory || imageHistory.length === 0) && (
-            <div className="text-center py-12">
-              <ImageIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                No images generated yet
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Enter a prompt above to generate your first image
-              </p>
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
