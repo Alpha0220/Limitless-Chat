@@ -478,7 +478,6 @@ export function Sidebar({
                   </div>
                   {!isCollapsed && (
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-muted-foreground truncate">Logged in as</p>
                       <p className="text-sm font-medium text-sidebar-foreground truncate">
                         {user.name || user.email || "User"}
                       </p>
