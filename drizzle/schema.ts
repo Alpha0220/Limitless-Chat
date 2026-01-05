@@ -35,11 +35,23 @@ export type InsertUser = typeof users.$inferInsert;
  */
 export const userSettings = mysqlTable("userSettings", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+  userId: int("userId").notNull().unique(),
   limitlessApiKey: text("limitlessApiKey"),
   openaiApiKey: text("openaiApiKey"),
   anthropicApiKey: text("anthropicApiKey"),
   selectedModel: varchar("selectedModel", { length: 100 }).default("gpt-4"),
+  
+  // Personalization Settings
+  styleTone_baseTone: mysqlEnum("styleTone_baseTone", ["formal", "friendly", "concise", "detailed"]).default("friendly"),
+  styleTone_additionalPreferences: text("styleTone_additionalPreferences"),
+  nickname: varchar("nickname", { length: 50 }),
+  occupation: varchar("occupation", { length: 100 }),
+  aboutUser_interests: text("aboutUser_interests"),
+  aboutUser_values: text("aboutUser_values"),
+  aboutUser_communicationPreferences: text("aboutUser_communicationPreferences"),
+  memorySettings_allowSavedMemory: boolean("memorySettings_allowSavedMemory").default(true),
+  chatHistorySettings_allowReferenceHistory: boolean("chatHistorySettings_allowReferenceHistory").default(true),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -221,3 +233,19 @@ export const generatedImages = mysqlTable("generatedImages", {
 
 export type GeneratedImage = typeof generatedImages.$inferSelect;
 export type InsertGeneratedImage = typeof generatedImages.$inferInsert;
+
+/**
+ * Personalization memories table for storing long-term user memories and preferences
+ */
+export const personalizationMemories = mysqlTable("personalizationMemories", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  memoryType: mysqlEnum("memoryType", ["user_preference", "conversation_context", "learned_info"]).notNull(),
+  content: text("content").notNull(),
+  source: varchar("source", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PersonalizationMemory = typeof personalizationMemories.$inferSelect;
+export type InsertPersonalizationMemory = typeof personalizationMemories.$inferInsert;

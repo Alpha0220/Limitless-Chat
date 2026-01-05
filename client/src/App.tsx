@@ -9,6 +9,7 @@ import Pricing from "./pages/Pricing";
 import Templates from "./pages/Templates";
 import MediaCreation from "./pages/MediaCreation";
 import Settings from "./pages/Settings";
+import Personalization from "./pages/Personalization";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,6 +20,7 @@ function Router() {
       <Route path={"/templates"} component={Templates} />
       <Route path={"/media"} component={MediaCreation} />
       <Route path={"/settings"} component={Settings} />
+      <Route path={"/personalization"} component={Personalization} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

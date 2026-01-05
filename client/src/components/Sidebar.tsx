@@ -39,6 +39,7 @@ import {
   LogOut,
   Trash2,
   ChevronDown,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
@@ -495,26 +496,29 @@ export function Sidebar({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <div className="px-3 py-2">
-                <p className="text-xs text-muted-foreground">Logged in as</p>
-                <p className="text-sm font-medium text-foreground truncate">
-                  {user.name || user.email || "User"}
-                </p>
-              </div>
-              <DropdownMenuSeparator />
-              <div className="px-3 py-2">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">Credits</span>
-                  <span className="text-sm font-bold text-foreground">{balance?.credits || 0}</span>
+              <div className="px-3 py-2 border-b">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {user.name || user.email || "User"}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {balance?.billingType === "prepaid" ? "Pre-paid" : "Pay-as-you-go"}
-                </p>
+              </div>
+              <div className="px-3 py-2 border-b">
+                <div className="flex items-center gap-2">
+                  <Coins className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Credits</span>
+                  <span className="text-sm font-bold text-foreground ml-auto">{balance?.credits || 0}</span>
+                </div>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setLocation("/pricing")} className="cursor-pointer">
                 <CreditCard className="h-4 w-4 mr-2" />
                 <span>Buy Credits</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocation("/personalization")} className="cursor-pointer">
+                <Settings className="h-4 w-4 mr-2" />
+                <span>Personalization</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLocation("/settings")} className="cursor-pointer">
                 <Settings className="h-4 w-4 mr-2" />

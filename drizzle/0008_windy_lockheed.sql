@@ -1,0 +1,1 @@
+ALTER TABLE `userSettings` ADD CONSTRAINT `userSettings_userId_unique` UNIQUE(`userId`);
