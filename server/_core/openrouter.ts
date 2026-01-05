@@ -156,3 +156,103 @@ export async function* streamOpenRouter(
     reader.releaseLock();
   }
 }
+
+
+/**
+ * Build a personalized system prompt based on user preferences
+ * This function constructs a system prompt that incorporates the user's personalization settings
+ */
+export function buildPersonalizedSystemPrompt(
+  baseSystemPrompt: string,
+  personalization?: {
+    styleTone_baseTone?: string;
+    styleTone_additionalPreferences?: string | null;
+    nickname?: string | null;
+    occupation?: string | null;
+    aboutUser_interests?: string | null;
+    aboutUser_values?: string | null;
+    aboutUser_communicationPreferences?: string | null;
+  }
+): string {
+  if (!personalization) {
+    return baseSystemPrompt;
+  }
+
+  const personalizedInstructions: string[] = [];
+
+  // Add tone preference
+  if (personalization.styleTone_baseTone) {
+    const toneInstructions: Record<string, string> = {
+      formal:
+        "Use a formal, professional tone. Be precise and avoid casual language.",
+      friendly:
+        "Use a warm, friendly tone. Be conversational and approachable.",
+      concise:
+        "Be concise and to the point. Provide brief, direct answers without unnecessary elaboration.",
+      detailed:
+        "Provide detailed, comprehensive explanations. Include examples and thorough context.",
+    };
+
+    const toneInstruction = toneInstructions[personalization.styleTone_baseTone];
+    if (toneInstruction) {
+      personalizedInstructions.push(toneInstruction);
+    }
+  }
+
+  // Add additional preferences
+  if (personalization.styleTone_additionalPreferences) {
+    try {
+      const preferences = JSON.parse(personalization.styleTone_additionalPreferences);
+      if (Array.isArray(preferences) && preferences.length > 0) {
+        personalizedInstructions.push(
+          `Additional preferences: ${preferences.join(", ")}`
+        );
+      }
+    } catch (e) {
+      // If not valid JSON, skip
+    }
+  }
+
+  // Add user context
+  const userContext: string[] = [];
+
+  if (personalization.nickname) {
+    userContext.push(`The user's name is ${personalization.nickname}.`);
+  }
+
+  if (personalization.occupation) {
+    userContext.push(`The user works as a ${personalization.occupation}.`);
+  }
+
+  if (personalization.aboutUser_interests) {
+    userContext.push(
+      `User's interests: ${personalization.aboutUser_interests}`
+    );
+  }
+
+  if (personalization.aboutUser_values) {
+    userContext.push(`User's values: ${personalization.aboutUser_values}`);
+  }
+
+  if (personalization.aboutUser_communicationPreferences) {
+    userContext.push(
+      `Communication preferences: ${personalization.aboutUser_communicationPreferences}`
+    );
+  }
+
+  if (userContext.length > 0) {
+    personalizedInstructions.push("User context: " + userContext.join(" "));
+  }
+
+  // Combine base prompt with personalized instructions
+  if (personalizedInstructions.length > 0) {
+    return (
+      baseSystemPrompt +
+      "\n\n" +
+      "Personalization settings:\n" +
+      personalizedInstructions.join("\n")
+    );
+  }
+
+  return baseSystemPrompt;
+}

@@ -450,3 +450,19 @@
 - [ ] Ensure mobile compatibility
 - [ ] Test error handling for each provider
 - [ ] Create checkpoint
+
+
+## Personalization Settings Feature
+- [x] Create userSettings table with personalization fields (nickname, occupation, interests, values, communication preferences)
+- [x] Create Personalization page UI with form inputs
+- [x] Implement backend API to fetch user personalization settings
+- [x] Implement backend API to save/update personalization settings
+- [x] Fix database duplicate records issue (add unique constraint on userId)
+- [x] Fix Drizzle ORM field retrieval (use explicit select for all fields)
+- [x] Implement personalized system prompt generation based on user settings
+- [x] Integrate personalization settings into chat streaming endpoint
+- [x] Test end-to-end: form loads data → AI uses settings in responses
+- [x] Verify AI uses nickname in responses (tested: "Your name is Natee!")
+- [ ] Write unit tests for personalization feature
+- [ ] Test save/update personalization settings functionality
+- [ ] Test memory and history settings integration

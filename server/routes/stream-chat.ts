@@ -2,9 +2,10 @@ import { Router } from "express";
 import { getDb } from "../db";
 import { chats, messages, users } from "../../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
-import { streamOpenRouter, calculateCredits, OpenRouterMessage } from "../_core/openrouter";
+import { streamOpenRouter, calculateCredits, OpenRouterMessage, buildPersonalizedSystemPrompt } from "../_core/openrouter";
 import { sdk } from "../_core/sdk";
 import { COOKIE_NAME } from "@shared/const";
+import { getPersonalizationSettings } from "../db";
 
 export const streamChatRouter = Router();
 
@@ -125,7 +126,7 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
     }
 
     // Get chat history
-    const chatHistory = await db
+    let chatHistory = await db
       .select()
       .from(messages)
       .where(eq(messages.chatId, finalChatId))
@@ -134,11 +135,41 @@ streamChatRouter.post("/api/stream-chat", async (req, res) => {
 
     console.log("[DEBUG] chatHistory length:", chatHistory.length);
 
-    // Prepare messages for OpenRouter
-    const openRouterMessages: OpenRouterMessage[] = chatHistory.map((msg) => ({
-      role: msg.role as "system" | "user" | "assistant",
-      content: msg.content,
-    }));
+    // Get user personalization settings
+    const personalizationSettings = await getPersonalizationSettings(userId);
+    console.log("[DEBUG] personalizationSettings:", {
+      baseTone: personalizationSettings?.styleTone_baseTone,
+      nickname: personalizationSettings?.nickname,
+      allowHistory: personalizationSettings?.chatHistorySettings_allowReferenceHistory,
+    });
+
+    // Filter chat history if allowReferenceHistory is false
+    if (personalizationSettings && personalizationSettings.chatHistorySettings_allowReferenceHistory === false) {
+      console.log("[DEBUG] Filtering chat history - allowReferenceHistory is false");
+      chatHistory = chatHistory.filter((msg) => msg.role === "user" && msg.content === content);
+    }
+
+    // Build personalized system prompt
+    const baseSystemPrompt = "You are a helpful AI assistant. Respond to the user's queries accurately and helpfully.";
+    const personalizationForPrompt = personalizationSettings ? {
+      styleTone_baseTone: personalizationSettings.styleTone_baseTone || undefined,
+      styleTone_additionalPreferences: personalizationSettings.styleTone_additionalPreferences,
+      nickname: personalizationSettings.nickname,
+      occupation: personalizationSettings.occupation,
+      aboutUser_interests: personalizationSettings.aboutUser_interests,
+      aboutUser_values: personalizationSettings.aboutUser_values,
+      aboutUser_communicationPreferences: personalizationSettings.aboutUser_communicationPreferences,
+    } : undefined;
+    const personalizedSystemPrompt = buildPersonalizedSystemPrompt(baseSystemPrompt, personalizationForPrompt);
+
+    // Prepare messages for OpenRouter with personalized system prompt
+    const openRouterMessages: OpenRouterMessage[] = [
+      { role: "system", content: personalizedSystemPrompt },
+      ...chatHistory.map((msg) => ({
+        role: msg.role as "system" | "user" | "assistant",
+        content: msg.content,
+      })),
+    ];
 
     // Set up SSE headers
     res.setHeader("Content-Type", "text/event-stream");

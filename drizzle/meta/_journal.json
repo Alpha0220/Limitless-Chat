@@ -50,6 +50,20 @@
       "when": 1762740015409,
       "tag": "0006_mighty_bloodaxe",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1767601154492,
+      "tag": "0007_absurd_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1767605629673,
+      "tag": "0008_windy_lockheed",
+      "breakpoints": true
     }
   ]
 }

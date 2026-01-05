@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, userSettings, UserSettings, InsertUserSettings } from "../drizzle/schema";
+import { InsertUser, users, userSettings, UserSettings, InsertUserSettings, personalizationMemories, InsertPersonalizationMemory, PersonalizationMemory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -102,7 +102,25 @@ export async function getUserSettings(userId: number): Promise<UserSettings | un
 
   try {
     const result = await db
-      .select()
+      .select({
+        id: userSettings.id,
+        userId: userSettings.userId,
+        limitlessApiKey: userSettings.limitlessApiKey,
+        openaiApiKey: userSettings.openaiApiKey,
+        anthropicApiKey: userSettings.anthropicApiKey,
+        selectedModel: userSettings.selectedModel,
+        styleTone_baseTone: userSettings.styleTone_baseTone,
+        styleTone_additionalPreferences: userSettings.styleTone_additionalPreferences,
+        nickname: userSettings.nickname,
+        occupation: userSettings.occupation,
+        aboutUser_interests: userSettings.aboutUser_interests,
+        aboutUser_values: userSettings.aboutUser_values,
+        aboutUser_communicationPreferences: userSettings.aboutUser_communicationPreferences,
+        memorySettings_allowSavedMemory: userSettings.memorySettings_allowSavedMemory,
+        chatHistorySettings_allowReferenceHistory: userSettings.chatHistorySettings_allowReferenceHistory,
+        createdAt: userSettings.createdAt,
+        updatedAt: userSettings.updatedAt,
+      })
       .from(userSettings)
       .where(eq(userSettings.userId, userId))
       .limit(1)
@@ -110,6 +128,7 @@ export async function getUserSettings(userId: number): Promise<UserSettings | un
 
     if (result.length > 0) {
       console.log("[Settings] getUserSettings - Found:", { userId, model: result[0].selectedModel });
+      console.log("[Settings] getUserSettings - Full result:", JSON.stringify(result[0], null, 2));
       return result[0];
     }
     console.log("[Settings] getUserSettings - No settings for userId:", userId);
@@ -134,15 +153,32 @@ export async function upsertUserSettings(
   }
 
   try {
-    console.log("[Settings] upsertUserSettings - Saving:", { userId, model: settings.selectedModel });
+    console.log("[Settings] upsertUserSettings - Saving:", { userId, nickname: settings.nickname, tone: settings.styleTone_baseTone });
+    
+    // Build the complete values object with all settings
     const values: InsertUserSettings = {
       userId,
-      ...settings,
+      // API Keys
+      limitlessApiKey: settings.limitlessApiKey || null,
+      openaiApiKey: settings.openaiApiKey || null,
+      anthropicApiKey: settings.anthropicApiKey || null,
+      selectedModel: settings.selectedModel || null,
+      // Personalization settings
+      styleTone_baseTone: settings.styleTone_baseTone || null,
+      styleTone_additionalPreferences: settings.styleTone_additionalPreferences || null,
+      nickname: settings.nickname || null,
+      occupation: settings.occupation || null,
+      aboutUser_interests: settings.aboutUser_interests || null,
+      aboutUser_values: settings.aboutUser_values || null,
+      aboutUser_communicationPreferences: settings.aboutUser_communicationPreferences || null,
+      memorySettings_allowSavedMemory: settings.memorySettings_allowSavedMemory !== undefined ? settings.memorySettings_allowSavedMemory : true,
+      chatHistorySettings_allowReferenceHistory: settings.chatHistorySettings_allowReferenceHistory !== undefined ? settings.chatHistorySettings_allowReferenceHistory : true,
     };
 
+    // Build update set from provided settings (only update fields that were explicitly provided)
     const updateSet: Record<string, unknown> = {};
 
-    // Build update set from provided settings
+    // API Keys
     if (settings.limitlessApiKey !== undefined) {
       updateSet.limitlessApiKey = settings.limitlessApiKey;
     }
@@ -154,6 +190,35 @@ export async function upsertUserSettings(
     }
     if (settings.selectedModel !== undefined) {
       updateSet.selectedModel = settings.selectedModel;
+    }
+    
+    // Personalization settings
+    if (settings.styleTone_baseTone !== undefined) {
+      updateSet.styleTone_baseTone = settings.styleTone_baseTone;
+    }
+    if (settings.styleTone_additionalPreferences !== undefined) {
+      updateSet.styleTone_additionalPreferences = settings.styleTone_additionalPreferences;
+    }
+    if (settings.nickname !== undefined) {
+      updateSet.nickname = settings.nickname;
+    }
+    if (settings.occupation !== undefined) {
+      updateSet.occupation = settings.occupation;
+    }
+    if (settings.aboutUser_interests !== undefined) {
+      updateSet.aboutUser_interests = settings.aboutUser_interests;
+    }
+    if (settings.aboutUser_values !== undefined) {
+      updateSet.aboutUser_values = settings.aboutUser_values;
+    }
+    if (settings.aboutUser_communicationPreferences !== undefined) {
+      updateSet.aboutUser_communicationPreferences = settings.aboutUser_communicationPreferences;
+    }
+    if (settings.memorySettings_allowSavedMemory !== undefined) {
+      updateSet.memorySettings_allowSavedMemory = settings.memorySettings_allowSavedMemory;
+    }
+    if (settings.chatHistorySettings_allowReferenceHistory !== undefined) {
+      updateSet.chatHistorySettings_allowReferenceHistory = settings.chatHistorySettings_allowReferenceHistory;
     }
 
     await db
@@ -174,3 +239,169 @@ export async function upsertUserSettings(
 }
 
 // TODO: add feature queries here as your schema grows.
+
+/**
+ * Get personalization settings by user ID
+ * If no settings exist, create default settings
+ */
+export async function getPersonalizationSettings(userId: number): Promise<UserSettings | undefined> {
+  let settings = await getUserSettings(userId);
+  
+  // If no settings exist, create default settings
+  if (!settings) {
+    console.log("[Personalization] Creating default settings for userId:", userId);
+    const defaultSettings: Partial<InsertUserSettings> = {
+      styleTone_baseTone: "friendly",
+      memorySettings_allowSavedMemory: true,
+      chatHistorySettings_allowReferenceHistory: true,
+    };
+    
+    try {
+      settings = await upsertUserSettings(userId, defaultSettings);
+    } catch (error) {
+      console.error("[Personalization] Failed to create default settings:", error);
+      // Return undefined if creation fails, but don't throw
+      return undefined;
+    }
+  }
+  
+  return settings;
+}
+
+/**
+ * Update personalization settings
+ */
+export async function updatePersonalizationSettings(
+  userId: number,
+  settings: Partial<InsertUserSettings>
+): Promise<UserSettings | undefined> {
+  return upsertUserSettings(userId, settings);
+}
+
+/**
+ * Reset personalization settings to defaults
+ */
+export async function resetPersonalizationToDefaults(userId: number): Promise<UserSettings | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot reset personalization: database not available");
+    return undefined;
+  }
+
+  try {
+    const defaultSettings: Partial<InsertUserSettings> = {
+      styleTone_baseTone: "friendly",
+      styleTone_additionalPreferences: null,
+      nickname: null,
+      occupation: null,
+      aboutUser_interests: null,
+      aboutUser_values: null,
+      aboutUser_communicationPreferences: null,
+      memorySettings_allowSavedMemory: true,
+      chatHistorySettings_allowReferenceHistory: true,
+    };
+
+    return upsertUserSettings(userId, defaultSettings);
+  } catch (error) {
+    console.error("[Database] Failed to reset personalization:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get saved memories for a user
+ */
+export async function getSavedMemories(userId: number): Promise<PersonalizationMemory[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get memories: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(personalizationMemories)
+      .where(eq(personalizationMemories.userId, userId))
+      .execute();
+
+    console.log("[Personalization] getSavedMemories - Found:", result.length, "memories");
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get memories:", error);
+    return [];
+  }
+}
+
+/**
+ * Add a new memory for a user
+ */
+export async function addMemory(
+  userId: number,
+  memoryType: "user_preference" | "conversation_context" | "learned_info",
+  content: string,
+  source?: string
+): Promise<PersonalizationMemory | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add memory: database not available");
+    return undefined;
+  }
+
+  try {
+    const memory: InsertPersonalizationMemory = {
+      userId,
+      memoryType,
+      content,
+      source: source || null,
+    };
+
+    await db.insert(personalizationMemories).values(memory).execute();
+
+    console.log("[Personalization] addMemory - Added memory for user:", userId);
+    return memory as PersonalizationMemory;
+  } catch (error) {
+    console.error("[Database] Failed to add memory:", error);
+    throw error;
+  }
+}
+
+/**
+ * Clear all memories for a user
+ */
+export async function clearMemories(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot clear memories: database not available");
+    return false;
+  }
+
+  try {
+    await db
+      .delete(personalizationMemories)
+      .where(eq(personalizationMemories.userId, userId))
+      .execute();
+
+    console.log("[Personalization] clearMemories - Cleared all memories for user:", userId);
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to clear memories:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get search personalization status (computed from memory + history settings)
+ */
+export async function getSearchPersonalizationStatus(userId: number): Promise<boolean> {
+  const settings = await getUserSettings(userId);
+  if (!settings) {
+    return false;
+  }
+
+  // Search is enabled only if both memory and history are allowed
+  return (
+    settings.memorySettings_allowSavedMemory === true &&
+    settings.chatHistorySettings_allowReferenceHistory === true
+  );
+}

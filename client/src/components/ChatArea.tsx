@@ -72,6 +72,10 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
   // Fetch current user's credit balance
   const { data: creditBalance } = trpc.credits.getBalance.useQuery();
 
+  // Fetch personalization settings
+  const { data: personalizationSettings } = trpc.personalization.getSettings.useQuery();
+  const { data: searchPersonalizationStatus } = trpc.personalization.getSearchPersonalizationStatus.useQuery();
+
   // Update local messages when data changes
   useEffect(() => {
     if (messagesData) {
@@ -336,6 +340,29 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
             <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-8 md:mb-12 text-center px-4">
               {selectedModel.toUpperCase()}
             </h2>
+
+            {/* Personalization Status Badges */}
+            {(personalizationSettings?.data?.styleTone_baseTone || 
+              personalizationSettings?.data?.nickname ||
+              personalizationSettings?.data?.memorySettings_allowSavedMemory) && (
+              <div className="mb-6 flex flex-wrap gap-2 justify-center">
+                {personalizationSettings.data?.styleTone_baseTone && (
+                  <div className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium text-primary">
+                    🎨 {personalizationSettings.data.styleTone_baseTone}
+                  </div>
+                )}
+                {personalizationSettings.data?.nickname && (
+                  <div className="px-3 py-1 bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-full text-xs font-medium text-blue-700 dark:text-blue-300">
+                    👤 {personalizationSettings.data.nickname}
+                  </div>
+                )}
+                {personalizationSettings.data?.memorySettings_allowSavedMemory && (
+                  <div className="px-3 py-1 bg-green-100 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-full text-xs font-medium text-green-700 dark:text-green-300">
+                    💾 Memory
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Suggested Prompts */}
             <div className="w-full space-y-3">
