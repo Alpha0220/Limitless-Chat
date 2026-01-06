@@ -466,3 +466,19 @@
 - [ ] Write unit tests for personalization feature
 - [ ] Test save/update personalization settings functionality
 - [ ] Test memory and history settings integration
+
+
+## Chat Input Box Redesign (Bottom Chat Box Feature)
+- [x] Remove top border line from chat input box
+- [x] Change file attachment icon from paperclip to "+" icon
+- [x] Position "+" button at bottom-left inside input box
+- [ ] Implement file attachment functionality (images, PDF, text files)
+- [x] Move model selector to bottom-right of input box
+- [x] Add "model default" label with downward arrow to model selector
+- [x] Change model selector dropdown from top to bottom positioning
+- [ ] Remove model selector from top header area
+- [x] Move submit (send) button inside the input box
+- [x] Style all elements to match the new bottom chat box design
+- [ ] Test file attachment functionality
+- [x] Test model selector dropdown behavior
+- [x] Test submit button functionality in new position

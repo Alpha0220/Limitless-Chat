@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, Mic, Sparkles, Loader2, Minimize2, Maximize2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Send, Plus, Mic, Sparkles, Loader2, Minimize2, Maximize2, ChevronDown } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
@@ -395,17 +396,20 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
       </ScrollArea>
 
       {/* Input Area - Fixed at bottom, textarea grows upward up to 50vh */}
-      <div className="absolute bottom-0 z-10 w-full border-t border-border bg-background p-4 flex-shrink-0">
-        <div className="flex gap-2 max-w-4xl mx-auto items-end">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground flex-shrink-0"
-          >
-            <Paperclip className="h-5 w-5" />
-          </Button>
+      <div className="absolute bottom-0 z-10 w-full bg-background p-4 flex-shrink-0">
+        <div className="flex gap-2 max-w-4xl mx-auto">
+          <div className="flex-1 relative bg-background border border-border rounded-lg">
+            {/* File attachment button - bottom left inside input box */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute bottom-2 left-2 h-6 w-6 text-muted-foreground hover:text-foreground"
+              title="Attach files"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
 
-          <div className="flex-1 relative">
+            {/* Textarea */}
             <Textarea
               ref={textareaRef}
               value={input}
@@ -413,17 +417,18 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
               onKeyDown={handleKeyDown}
               placeholder="How can I help you today?"
               className={cn(
-                "w-full resize-none overflow-y-auto min-h-[2.5rem]",
+                "w-full resize-none overflow-y-auto min-h-[2.5rem] pl-12 pr-32 border-0",
                 isMinimized ? "max-h-[2.5rem]" : "max-h-[50vh]"
               )}
               rows={1}
             />
+
             {/* Minimize/Maximize Button */}
             {showMinMaxButton && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-4 h-6 w-6 text-slate-500 bg-slate-100 hover:text-white hover:bg-primary/50"
+                className="absolute top-2 right-28 h-6 w-6 text-slate-500 bg-slate-100 hover:text-white hover:bg-primary/50"
                 onClick={() => setIsMinimized(!isMinimized)}
                 title={isMinimized ? "Maximize" : "Minimize"}
               >
@@ -434,28 +439,43 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
                 )}
               </Button>
             )}
+
+            {/* Model selector - bottom right inside input box */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute bottom-2 right-12 h-6 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  model default
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="end" side="top">
+                <div className="space-y-1">
+                  <Button variant="ghost" className="w-full justify-start text-sm">GPT-5</Button>
+                  <Button variant="ghost" className="w-full justify-start text-sm">GPT-4</Button>
+                  <Button variant="ghost" className="w-full justify-start text-sm">Claude</Button>
+                  <Button variant="ghost" className="w-full justify-start text-sm">Gemini</Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Send button - overlapping at bottom right */}
+            <Button
+              onClick={handleSendStreaming}
+              disabled={isStreaming || !input.trim()}
+              className="absolute bottom-2 right-2 h-8 w-8 p-0 bg-primary hover:bg-primary/90 text-primary-foreground"
+              size="icon"
+            >
+              {isStreaming ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
           </div>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground flex-shrink-0"
-          >
-            <Mic className="h-5 w-5" />
-          </Button>
-
-          <Button
-            onClick={handleSendStreaming}
-            disabled={isStreaming || !input.trim()}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
-            size="icon"
-          >
-            {isStreaming ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </Button>
         </div>
       </div>
     </div>
