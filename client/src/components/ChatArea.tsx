@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Send, Plus, Mic, Sparkles, Loader2, Minimize2, Maximize2, ChevronDown } from "lucide-react";
+import { Send, Plus, Mic, Sparkles, Loader2, Minimize2, Maximize2, ChevronDown, Upload, Monitor, Camera, Image, Brain, Globe } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
@@ -410,15 +410,63 @@ export function ChatArea({ chatId, selectedModel, onChatCreated, onModelChange }
             {/* Lower Section: Controls */}
             <div className="flex items-center justify-between px-3 pb-3 pt-1">
               {/* Left Controls */}
+              {/* Left Controls */}
               <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
-                  title="Attach files"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                      title="Attach files"
+                    >
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-1.5" align="start" side="top">
+                    <div className="grid gap-0.5">
+                      <Button variant="ghost" className="justify-start gap-2 h-9 px-2 text-sm font-normal">
+                        <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                          <Upload className="h-4 w-4" />
+                        </div>
+                        <span className="truncate">Add photos & files</span>
+                      </Button>
+                      <Button variant="ghost" className="justify-start gap-2 h-9 px-2 text-sm font-normal">
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                          <Monitor className="h-4 w-4" />
+                        </div>
+                        <span className="truncate">Take screenshot</span>
+                      </Button>
+                      <Button variant="ghost" className="justify-start gap-2 h-9 px-2 text-sm font-normal">
+                         <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                          <Camera className="h-4 w-4" />
+                        </div>
+                        <span className="truncate">Take photo</span>
+                      </Button>
+                      
+                      <div className="my-1 border-t border-border/50" />
+                      
+                      <Button variant="ghost" className="justify-start gap-2 h-9 px-2 text-sm font-normal">
+                        <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                          <Image className="h-4 w-4" />
+                        </div>
+                        <span className="truncate">Create image</span>
+                      </Button>
+                      <Button variant="ghost" className="justify-start gap-2 h-9 px-2 text-sm font-normal">
+                        <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                          <Brain className="h-4 w-4" />
+                        </div>
+                        <span className="truncate">Thinking</span>
+                      </Button>
+                      <Button variant="ghost" className="justify-start gap-2 h-9 px-2 text-sm font-normal">
+                         <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                          <Globe className="h-4 w-4" />
+                        </div>
+                        <span className="truncate">Deep research</span>
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Right Controls */}
