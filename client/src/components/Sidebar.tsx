@@ -423,33 +423,74 @@ export function Sidebar({
                 <AccordionTrigger className="py-2 hover:bg-sidebar-accent rounded-md text-xs font-semibold text-muted-foreground uppercase tracking-wider px-0">
                   Recent Chats
                 </AccordionTrigger>
-                <AccordionContent className="pb-4 space-y-1 w-full px-0">
-                  {organizedChats.recent.length > 0 ? (
-                    organizedChats.recent.map((chat) => (
-                      <ChatContextMenu
-                        key={chat.id}
-                        chatId={chat.id}
-                        onDelete={() => onSelectChat(null)}
-                      >
-                        <div className="group relative flex items-center w-full">
-                          <Button
-                            variant="ghost"
-                            className={cn(
-                              "flex-1 justify-start text-left text-sm text-sidebar-foreground hover:bg-sidebar-accent truncate px-3",
-                              selectedChatId === chat.id && "bg-sidebar-accent"
-                            )}
-                            onClick={() => onSelectChat(chat.id)}
-                            title={chat.title || "New Chat"}
-                          >
-                            <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                            <span className="ml-3 truncate">{chat.title || "New Chat"}</span>
-                          </Button>
-                        </div>
-                      </ChatContextMenu>
-                    ))
-                  ) : (
-                    <p className="px-3 text-xs text-muted-foreground">No recent chats</p>
-                  )}
+                <AccordionContent className="pb-4 w-full px-0">
+                  {(() => {
+                    if (organizedChats.recent.length === 0) {
+                      return <p className="px-3 text-xs text-muted-foreground">No recent chats</p>;
+                    }
+
+                    const grouped = organizedChats.recent.reduce((acc, chat) => {
+                      const date = new Date(chat.updatedAt || new Date());
+                      const now = new Date();
+                      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                      const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                      const diffTime = today.getTime() - target.getTime();
+                      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+                      let label = "Older";
+                      if (diffDays === 0) label = "Today";
+                      else if (diffDays === 1) label = "Yesterday";
+                      else if (diffDays <= 7) label = "Previous 7 Days";
+                      else if (diffDays <= 30) label = "Previous 30 Days";
+
+                      if (!acc[label]) acc[label] = [];
+                      acc[label].push(chat);
+                      return acc;
+                    }, {} as Record<string, typeof organizedChats.recent>);
+
+                    const groups = ["Today", "Yesterday", "Previous 7 Days", "Previous 30 Days", "Older"];
+
+                    return (
+                      <div className="space-y-1">
+                        {groups.map((group) => {
+                          const chats = grouped[group];
+                          if (!chats || chats.length === 0) return null;
+
+                          return (
+                            <div key={group}>
+                              <h3 className="px-3 pb-1 pt-3 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">
+                                {group}
+                              </h3>
+                              <div className="space-y-0.5">
+                                {chats.map((chat) => (
+                                  <ChatContextMenu
+                                    key={chat.id}
+                                    chatId={chat.id}
+                                    onDelete={() => onSelectChat(null)}
+                                  >
+                                    <div className="group relative flex items-center w-full">
+                                      <Button
+                                        variant="ghost"
+                                        className={cn(
+                                          "flex-1 justify-start text-left text-sm font-normal truncate px-3 h-8",
+                                          "text-muted-foreground/80 hover:text-foreground hover:bg-sidebar-accent/50",
+                                          selectedChatId === chat.id && "bg-sidebar-accent text-foreground font-medium"
+                                        )}
+                                        onClick={() => onSelectChat(chat.id)}
+                                        title={chat.title || "New Chat"}
+                                      >
+                                        <span className="truncate">{chat.title || "New Chat"}</span>
+                                      </Button>
+                                    </div>
+                                  </ChatContextMenu>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
