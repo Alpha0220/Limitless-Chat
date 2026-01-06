@@ -53,7 +53,7 @@ const suggestedPrompts = [
   },
 ];
 
-export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps) {
+export function ChatArea({ chatId, selectedModel, onChatCreated, onModelChange }: ChatAreaProps & { onModelChange?: (model: string) => void }) {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
@@ -298,6 +298,11 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
     setInput(`${prompt.title}: ${prompt.description}`);
   };
 
+  const cleanModelName = (modelId: string) => {
+    const parts = modelId.split('/');
+    return parts.length > 1 ? parts[1].replace(/-/g, ' ') : modelId;
+  };
+
   if (messagesLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -307,177 +312,174 @@ export function ChatArea({ chatId, selectedModel, onChatCreated }: ChatAreaProps
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full bg-background relative">
       {/* Messages Area */}
-      <ScrollArea className="flex-1 px-4 py-6 max-h-[calc(100vh-130px)]" ref={scrollRef}>
-        {/* Messages */}
-        {messages.map((msg) => (
-          <div key={msg.id} className={cn("flex mb-4", msg.role === "user" ? "justify-end" : "justify-start")}>
-            <div
-              className={cn(
-                "max-w-[80%] md:max-w-[70%] rounded-lg px-4 py-3 border",
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground rounded-br-none"
-                  : "bg-muted text-foreground rounded-bl-none border-border"
-              )}
-            >
-              {msg.role === "assistant" ? (
-                <Streamdown>{msg.content}</Streamdown>
-              ) : (
-                <p className="whitespace-pre-wrap">{msg.content}</p>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {showSuggestedPrompts && (
-          <div className="flex flex-col items-center justify-center h-full max-w-3xl mx-auto">
-            {/* Model Icon */}
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-
-            {/* Model Name */}
-            <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-8 md:mb-12 text-center px-4">
-              {selectedModel.toUpperCase()}
-            </h2>
-
-            {/* Personalization Status Badges */}
-            {(personalizationSettings?.data?.styleTone_baseTone || 
-              personalizationSettings?.data?.nickname ||
-              personalizationSettings?.data?.memorySettings_allowSavedMemory) && (
-              <div className="mb-6 flex flex-wrap gap-2 justify-center">
-                {personalizationSettings.data?.styleTone_baseTone && (
-                  <div className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-xs font-medium text-primary">
-                    🎨 {personalizationSettings.data.styleTone_baseTone}
-                  </div>
+      <ScrollArea className="flex-1 px-4 py-6" ref={scrollRef}>
+        <div className="max-w-3xl mx-auto pb-4">
+          {/* Messages */}
+          {messages.map((msg) => (
+            <div key={msg.id} className={cn("flex mb-6", msg.role === "user" ? "justify-end" : "justify-start")}>
+              <div
+                className={cn(
+                  "max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm",
+                  msg.role === "user"
+                    ? "bg-primary/10 text-primary rounded-br-none"
+                    : "bg-muted/50 text-foreground rounded-bl-none"
                 )}
-                {personalizationSettings.data?.nickname && (
-                  <div className="px-3 py-1 bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-full text-xs font-medium text-blue-700 dark:text-blue-300">
-                    👤 {personalizationSettings.data.nickname}
-                  </div>
-                )}
-                {personalizationSettings.data?.memorySettings_allowSavedMemory && (
-                  <div className="px-3 py-1 bg-green-100 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-full text-xs font-medium text-green-700 dark:text-green-300">
-                    💾 Memory
-                  </div>
+              >
+                {msg.role === "assistant" ? (
+                  <Streamdown>{msg.content}</Streamdown>
+                ) : (
+                  <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                 )}
               </div>
-            )}
+            </div>
+          ))}
 
-            {/* Suggested Prompts */}
-            <div className="w-full space-y-3">
-              <div className="flex items-center gap-2 text-muted-foreground mb-4">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-sm">Suggested</span>
+          {showSuggestedPrompts && (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] transition-all animate-in fade-in duration-500">
+              {/* Model Icon */}
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mb-8 shadow-sm">
+                <Sparkles className="h-8 w-8 text-primary" />
               </div>
-              {suggestedPrompts.map((prompt, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleSuggestedPrompt(prompt)}
-                  className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent transition-colors"
-                >
-                  <div className="font-medium text-sm text-foreground">{prompt.title}</div>
-                  <div className="text-xs text-muted-foreground">{prompt.description}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Streaming Content */}
-        {streamingContent && (
-          <div className="flex mb-4 justify-start">
-            <div className="max-w-[80%] md:max-w-[70%] rounded-lg px-4 py-3 bg-muted text-foreground rounded-bl-none border border-border">
-              <Streamdown>{streamingContent}</Streamdown>
+              {/* Model Name */}
+              <h2 className="text-3xl font-medium text-foreground mb-12 text-center tracking-tight">
+                {cleanModelName(selectedModel).toUpperCase()}
+              </h2>
+
+              {/* Suggested Prompts */}
+              <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3">
+                {suggestedPrompts.map((prompt, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSuggestedPrompt(prompt)}
+                    className="flex flex-col text-left p-4 rounded-2xl bg-muted/30 hover:bg-muted/60 transition-all border border-transparent hover:border-border/50"
+                  >
+                    <span className="font-medium text-sm text-foreground mb-1">{prompt.title}</span>
+                    <span className="text-xs text-muted-foreground">{prompt.description}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Streaming Content */}
+          {streamingContent && (
+            <div className="flex mb-6 justify-start">
+              <div className="max-w-[85%] rounded-2xl px-5 py-3.5 bg-muted/50 text-foreground rounded-bl-none shadow-sm">
+                <Streamdown>{streamingContent}</Streamdown>
+              </div>
+            </div>
+          )}
+          
+          {/* Spacer for fixed bottom input */}
+          <div className="h-32" /> 
+        </div>
       </ScrollArea>
 
-      {/* Input Area - Fixed at bottom, textarea grows upward up to 50vh */}
-      <div className="absolute bottom-0 z-10 w-full bg-background p-4 flex-shrink-0">
-        <div className="flex gap-2 max-w-4xl mx-auto">
-          <div className="flex-1 relative bg-background border border-border rounded-lg">
-            {/* File attachment button - bottom left inside input box */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute bottom-2 left-2 h-6 w-6 text-muted-foreground hover:text-foreground"
-              title="Attach files"
-            >
-              <Plus className="h-5 w-5" />
-            </Button>
-
-            {/* Textarea */}
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="How can I help you today?"
-              className={cn(
-                "w-full resize-none overflow-y-auto min-h-[2.5rem] pl-12 pr-32 border-0",
-                isMinimized ? "max-h-[2.5rem]" : "max-h-[50vh]"
-              )}
-              rows={1}
-            />
-
-            {/* Minimize/Maximize Button */}
-            {showMinMaxButton && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-2 right-28 h-6 w-6 text-slate-500 bg-slate-100 hover:text-white hover:bg-primary/50"
-                onClick={() => setIsMinimized(!isMinimized)}
-                title={isMinimized ? "Maximize" : "Minimize"}
-              >
-                {isMinimized ? (
-                  <Maximize2 className="h-4 w-4" />
-                ) : (
-                  <Minimize2 className="h-4 w-4" />
+      {/* Input Area - Fixed at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-background via-background to-transparent pb-6 pt-10 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className={cn(
+            "bg-muted/40 backdrop-blur-xl border border-input rounded-[28px] shadow-sm transition-all duration-200",
+            "focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 focus-within:bg-background"
+          )}>
+            {/* Upper Section: Textarea */}
+            <div className="relative p-2">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask anything..."
+                className={cn(
+                  "w-full resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 text-base py-3 px-4 min-h-[60px]",
+                  isMinimized ? "max-h-[60px]" : "max-h-[200px]"
                 )}
-              </Button>
-            )}
+                rows={1}
+              />
+            </div>
 
-            {/* Model selector - bottom right inside input box */}
-            <Popover>
-              <PopoverTrigger asChild>
+            {/* Separator / Layout Indicator */}
+            {/* The user requested a layout with spacing/dots. We use a subtle padding logic instead of a hard line to keep it modern, or a very subtle border if desired.
+                Gemini uses empty space. We'll add a small spacer. */}
+            
+            {/* Lower Section: Controls */}
+            <div className="flex items-center justify-between px-3 pb-3 pt-1">
+              {/* Left Controls */}
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="absolute bottom-2 right-12 h-6 text-xs text-muted-foreground hover:text-foreground"
+                  size="icon"
+                  className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                  title="Attach files"
                 >
-                  model default
-                  <ChevronDown className="h-3 w-3 ml-1" />
+                  <Plus className="h-5 w-5" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-2" align="end" side="top">
-                <div className="space-y-1">
-                  <Button variant="ghost" className="w-full justify-start text-sm">GPT-5</Button>
-                  <Button variant="ghost" className="w-full justify-start text-sm">GPT-4</Button>
-                  <Button variant="ghost" className="w-full justify-start text-sm">Claude</Button>
-                  <Button variant="ghost" className="w-full justify-start text-sm">Gemini</Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+              </div>
 
-            {/* Send button - overlapping at bottom right */}
-            <Button
-              onClick={handleSendStreaming}
-              disabled={isStreaming || !input.trim()}
-              className="absolute bottom-2 right-2 h-8 w-8 p-0 bg-primary hover:bg-primary/90 text-primary-foreground"
-              size="icon"
-            >
-              {isStreaming ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
+              {/* Right Controls */}
+              <div className="flex items-center gap-2">
+                {/* Model Selector dropdown */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 pl-3 pr-2 gap-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                    >
+                      {selectedModel.split('/')[1]?.replace(/-/g, ' ').substring(0, 15) || 'Model'}
+                      <ChevronDown className="h-3 w-3 opacity-70" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-2" align="end" side="top">
+                    <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Select Model</div>
+                      {Object.keys(MODEL_CREDITS).map((modelId) => (
+                        <Button
+                          key={modelId}
+                          variant={selectedModel === modelId ? "secondary" : "ghost"}
+                          className="w-full justify-start text-sm h-auto py-2 px-3"
+                          onClick={() => onModelChange?.(modelId)}
+                        >
+                          <div className="flex flex-col items-start gap-0.5">
+                            <span>{cleanModelName(modelId)}</span>
+                            <span className="text-[10px] text-muted-foreground font-normal">
+                              {MODEL_CREDITS[modelId]} local credits
+                            </span>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <div className="h-4 w-[1px] bg-border mx-1" />
+
+                <Button
+                  onClick={handleSendStreaming}
+                  disabled={isStreaming || !input.trim()}
+                  className="h-9 w-9 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all p-0 flex items-center justify-center"
+                >
+                  {isStreaming ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 ml-0.5" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-2.5">
+            <p className="text-[10px] text-muted-foreground/60">
+              AI can make mistakes. Check important info.
+            </p>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

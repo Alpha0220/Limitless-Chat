@@ -124,6 +124,7 @@ export default function Home() {
           chatId={selectedChatId}
           selectedModel={selectedModel}
           onChatCreated={(chatId) => setSelectedChatId(chatId)}
+          onModelChange={setSelectedModel}
         />
       </div>
     </div>
