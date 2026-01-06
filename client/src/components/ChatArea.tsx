@@ -321,16 +321,18 @@ export function ChatArea({ chatId, selectedModel, onChatCreated, onModelChange }
             <div key={msg.id} className={cn("flex mb-6", msg.role === "user" ? "justify-end" : "justify-start")}>
               <div
                 className={cn(
-                  "max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm",
+                  "max-w-[85%] rounded-2xl px-5 py-3.5 shadow-sm overflow-hidden",
                   msg.role === "user"
                     ? "bg-primary/10 text-primary rounded-br-none"
                     : "bg-muted/50 text-foreground rounded-bl-none"
                 )}
               >
                 {msg.role === "assistant" ? (
-                  <Streamdown>{msg.content}</Streamdown>
+                  <div className="break-words">
+                    <Streamdown>{msg.content}</Streamdown>
+                  </div>
                 ) : (
-                  <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  <p className="whitespace-pre-wrap leading-relaxed break-words break-all">{msg.content}</p>
                 )}
               </div>
             </div>
